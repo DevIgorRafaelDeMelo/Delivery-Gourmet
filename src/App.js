@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { FaPlus, FaMinus } from "react-icons/fa"; // Importar ícones do React Icons
 
 const produtos = {
   comidas: [
@@ -169,7 +170,7 @@ function App() {
   const [selectedProduct, setSelectedProduct] = useState(null); // Estado para guardar o produto selecionado
   const [showCard, setShowCard] = useState(false); // Estado para controlar a exibição do card
   const [quantity, setQuantity] = useState(1); // Quantidade inicial predefinida
-  const [carrinho, setCarrinho] = useState([]); // Estado para armazenar os itens do carrinho
+  const [carrinho, setCarrinho] = useState([]);
   const [mostrarCarrinho, setMostrarCarrinho] = useState(true); // Controle da visibilidade do carrinho
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
@@ -177,24 +178,55 @@ function App() {
     setSelectedProduct(produto); // Define o produto selecionado
     setShowCard(true); // Exibe o card
   };
+  const [selectedIngredients, setSelectedIngredients] = useState([]);
 
+  const handleAddIngredient = (ingredient) => {
+    setSelectedIngredients([...selectedIngredients, ingredient]);
+  };
   const handleCloseCard = () => {
     setShowCard(false); // Fecha o card
     setSelectedProduct(null); // Limpa o produto selecionado
   };
 
+  const handleRemoveIngredient = (ingredient) => {
+    setSelectedIngredients(
+      selectedIngredients.filter((i) => i.nome !== ingredient.nome)
+    );
+  };
   const handleConfirmarCompra = () => {
-    const item = {
-      produto: selectedProduct.nome,
-      preco: selectedProduct.preco,
+    // Calcular o valor total (produto + ingredientes)
+    const valorTotal =
+      quantity *
+        parseFloat(selectedProduct?.preco.replace("R$", "").replace(",", ".")) +
+      selectedIngredients.reduce(
+        (acc, ingredient) => acc + ingredient.valor,
+        0
+      );
+
+    // Criar um novo item para o carrinho
+    const novoItem = {
+      produto: selectedProduct?.nome,
       quantidade: quantity,
+      preco: selectedProduct?.preco,
+      ingredientes: selectedIngredients,
+      valorTotal: valorTotal.toFixed(2),
     };
 
-    setCarrinho((prevCarrinho) => [...prevCarrinho, item]); // Adiciona o item ao carrinho
-    setShowCard(false); // Fecha o card
-    setSelectedProduct(null); // Limpa o produto selecionado
-    setQuantity(1); // Reseta a quantidade
+    // Adicionar o novo item ao carrinho
+    setCarrinho((prevCarrinho) => [...prevCarrinho, novoItem]);
+
+    // Limpar os estados para uma nova seleção
+    setSelectedIngredients([]);
+    setQuantity(1);
+    handleCloseCard();
   };
+
+  const [ingredients] = useState([
+    { nome: "Tomate", valor: 1.5 },
+    { nome: "Cebola", valor: 1.0 },
+    { nome: "Queijo", valor: 2.5 },
+    { nome: "Azeitonas", valor: 1.8 },
+  ]);
 
   const handleRemoverItem = (index) => {
     setCarrinho((prevCarrinho) => prevCarrinho.filter((_, i) => i !== index));
@@ -258,38 +290,100 @@ function App() {
               <h2 className="text-3xl font-semibold mb-4 text-center text-teal-700">
                 {selectedProduct?.nome}
               </h2>
+
+              {/* Valor unitário atualizado com o total */}
               <p className="text-lg text-center text-gray-700 mb-6">
                 Valor unitário:{" "}
                 <span className="font-bold text-gray-800">
-                  {selectedProduct?.preco}
-                </span>
-              </p>
-
-              {/* Quantidade e total */}
-              <label className="block mb-6">
-                <span className="block text-gray-700 font-medium mb-2">
-                  Quantidade:
-                </span>
-                <input
-                  type="number"
-                  min="1"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  className="border border-gray-300 rounded-lg p-3 w-full text-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                  placeholder="Digite a quantidade"
-                />
-              </label>
-
-              <p className="text-lg text-center text-gray-700 mb-6">
-                Total:{" "}
-                <span className="font-bold text-orange-500">
                   R$
                   {(
                     quantity *
-                    parseFloat(
-                      selectedProduct?.preco.replace("R$", "").replace(",", ".")
+                      parseFloat(
+                        selectedProduct?.preco
+                          .replace("R$", "")
+                          .replace(",", ".")
+                      ) +
+                    selectedIngredients.reduce(
+                      (acc, ingredient) => acc + ingredient.valor,
+                      0
                     )
                   ).toFixed(2)}
+                </span>
+              </p>
+              <div className="block mb-6">
+                <span className="block text-gray-700 font-medium mb-2">
+                  Quantidade:
+                </span>
+                <div className="flex items-center border border-gray-300 rounded-lg p-3 w-full focus-within:ring-2 focus-within:ring-teal-500">
+                  {/* Botão para diminuir quantidade */}
+                  <button
+                    className="text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded-lg transition duration-300 font-semibold"
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  >
+                    -
+                  </button>
+                  {/* Input para exibir quantidade */}
+                  <input
+                    type="number"
+                    min="1"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Number(e.target.value))}
+                    className="w-full text-center text-lg focus:outline-none"
+                    placeholder="Digite a quantidade"
+                    style={{
+                      MozAppearance: "textfield",
+                      WebkitAppearance: "none",
+                    }}
+                  />
+                  {/* Botão para aumentar quantidade */}
+                  <button
+                    className="text-white bg-teal-500 hover:bg-teal-600 px-3 py-1 rounded-lg transition duration-300 font-semibold"
+                    onClick={() => setQuantity(quantity + 1)}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Ingredientes complementares */}
+              <div className="mb-6">
+                <span className="block text-gray-700 font-medium mb-2">
+                  Ingredientes complementares:
+                </span>
+                {ingredients.map((ingredient, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between mb-2"
+                  >
+                    <span className="text-gray-800">
+                      {ingredient.nome} - R${ingredient.valor.toFixed(2)}
+                    </span>
+                    <div className="flex items-center space-x-2">
+                      {/* Botão para retirar ingrediente com ícone */}
+                      <button
+                        className="bg-red-500 text-black px-3 py-1 rounded-lg hover:bg-red-600 transition duration-300 font-semibold flex items-center space-x-2"
+                        onClick={() => handleRemoveIngredient(ingredient)}
+                      >
+                        <FaMinus className="text-white" />{" "}
+                        {/* Ícone para diminuir */}
+                      </button>
+                      {/* Botão para adicionar ingrediente com ícone */}
+                      <button
+                        className="bg-teal-500 text-white px-3 py-1 rounded-lg hover:bg-teal-600 transition duration-300 font-semibold flex items-center space-x-2"
+                        onClick={() => handleAddIngredient(ingredient)}
+                      >
+                        <FaPlus className="text-white" />{" "}
+                        {/* Ícone para adicionar */}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-lg text-center text-gray-700 mb-6">
+                Ingredientes adicionados:{" "}
+                <span className="font-bold text-gray-800">
+                  {selectedIngredients.map((i) => i.nome).join(", ")}
                 </span>
               </p>
 
@@ -303,7 +397,7 @@ function App() {
                 </button>
                 <button
                   className="px-6 py-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition duration-300 font-semibold"
-                  onClick={handleConfirmarCompra}
+                  onClick={handleConfirmarCompra} // Lógica do botão
                 >
                   Confirmar
                 </button>
@@ -330,47 +424,134 @@ function App() {
               ✕
             </button>
           </div>
-          {carrinho.length > 0 ? (
-            <ul className="list-none space-y-4">
-              {carrinho.map((item, index) => (
-                <li
-                  key={index}
-                  className="p-4 bg-gray-100 border border-gray-300 rounded-lg shadow-md flex justify-between items-center"
+
+          {/* Carrinho */}
+          <section
+            className={`fixed top-0 right-0 w-80 h-screen bg-gray-50 shadow-xl border-l border-gray-200 p-4 flex flex-col ${
+              mostrarCarrinho ? "" : "hidden"
+            }`}
+          >
+            {/* Conteúdo do carrinho */}
+            <div className="overflow-y-auto flex-grow">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-semibold text-teal-700">
+                  Carrinho
+                </h2>
+                {/* Botão para ocultar o carrinho */}
+                <button
+                  className="text-gray-400 hover:text-teal-500 transition duration-300"
+                  onClick={() => setMostrarCarrinho(false)}
                 >
-                  <div>
-                    <p className="text-lg font-medium text-gray-800">
-                      {item.quantidade}x {item.produto} - Total:{" "}
-                      <span className="font-bold text-orange-500">
-                        R$
-                        {(
-                          item.quantidade *
-                          parseFloat(
-                            item.preco.replace("R$", "").replace(",", ".")
-                          )
-                        ).toFixed(2)}
-                      </span>
-                    </p>
-                  </div>
-                  {/* Ícone de exclusão */}
-                  <button
-                    className="text-gray-400 hover:text-red-500 transition duration-300"
-                    onClick={() => handleRemoverItem(index)}
-                  >
-                    🗑️
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-600">O carrinho está vazio.</p>
-          )}
+                  ✕
+                </button>
+              </div>
+
+              {/* Carrinho */}
+              {carrinho.length > 0 ? (
+                <ul className="list-none space-y-4">
+                  {carrinho.map((item, index) => (
+                    <li
+                      key={index}
+                      className="p-4 bg-gray-100 border border-gray-300 rounded-lg shadow-md flex justify-between items-center"
+                    >
+                      <div>
+                        {/* Exibição do nome do produto e valor total */}
+                        <p className="text-lg font-medium text-gray-800">
+                          {item.quantidade}x {item.produto} - Total:{" "}
+                          <span className="font-bold text-orange-500">
+                            R$
+                            {(
+                              item.quantidade *
+                                parseFloat(
+                                  item.preco.replace("R$", "").replace(",", ".")
+                                ) +
+                              (item.ingredientes || []).reduce(
+                                (acc, ingrediente) => acc + ingrediente.valor,
+                                0
+                              )
+                            ).toFixed(2)}
+                          </span>
+                        </p>
+
+                        {/* Ingredientes adicionais */}
+                        {item.ingredientes && item.ingredientes.length > 0 && (
+                          <p className="text-sm text-gray-600 mt-2">
+                            Ingredientes adicionais:{" "}
+                            <span className="text-gray-800">
+                              {item.ingredientes
+                                .map((ingrediente) => ingrediente.nome)
+                                .join(", ")}{" "}
+                              - R$
+                              {item.ingredientes
+                                .reduce(
+                                  (acc, ingrediente) => acc + ingrediente.valor,
+                                  0
+                                )
+                                .toFixed(2)}
+                            </span>
+                          </p>
+                        )}
+                      </div>
+                      {/* Ícone de exclusão */}
+                      <button
+                        className="text-gray-400 hover:text-red-500 transition duration-300"
+                        onClick={() => handleRemoverItem(index)}
+                      >
+                        🗑️
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-600">O carrinho está vazio.</p>
+              )}
+            </div>
+
+            {/* Valor Total e Botão no rodapé */}
+            {carrinho.length > 0 && (
+              <div className="mt-4">
+                {/* Valor Total */}
+                <div>
+                  <p className="text-lg font-semibold text-gray-800">
+                    Valor Total:{" "}
+                    <span className="font-bold text-orange-500">
+                      R$
+                      {carrinho
+                        .reduce((acc, item) => {
+                          return (
+                            acc +
+                            item.quantidade *
+                              parseFloat(
+                                item.preco.replace("R$", "").replace(",", ".")
+                              ) +
+                            (item.ingredientes || []).reduce(
+                              (accIng, ingrediente) =>
+                                accIng + ingrediente.valor,
+                              0
+                            )
+                          );
+                        }, 0)
+                        .toFixed(2)}
+                    </span>
+                  </p>
+                </div>
+                {/* Botão para finalizar compra */}
+                <button
+                  className="w-full px-6 py-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition duration-300 font-semibold mt-4"
+                  onClick={() => setMostrarFormulario(true)} // Abre o formulário
+                >
+                  Finalizar Compra
+                </button>
+              </div>
+            )}
+          </section>
         </div>
 
         {/* Valor Total e Botão no rodapé */}
         {carrinho.length > 0 && (
           <div className="mt-4">
             {/* Valor Total */}
-            <div className="">
+            <div className="mt-4">
               <p className="text-lg font-semibold text-gray-800">
                 Valor Total:{" "}
                 <span className="font-bold text-orange-500">
@@ -382,7 +563,11 @@ function App() {
                         item.quantidade *
                           parseFloat(
                             item.preco.replace("R$", "").replace(",", ".")
-                          )
+                          ) +
+                        (item.ingredientes || []).reduce(
+                          (accIng, ingrediente) => accIng + ingrediente.valor,
+                          0
+                        )
                       );
                     }, 0)
                     .toFixed(2)}
@@ -460,13 +645,23 @@ function App() {
                     type="text"
                     value={`R$${carrinho
                       .reduce((acc, item) => {
-                        return (
-                          acc +
+                        // Calcula o valor do produto multiplicado pela quantidade
+                        const valorProdutos =
                           item.quantidade *
-                            parseFloat(
-                              item.preco.replace("R$", "").replace(",", ".")
-                            )
+                          parseFloat(
+                            item.preco.replace("R$", "").replace(",", ".")
+                          );
+
+                        // Calcula o total dos ingredientes adicionais
+                        const valorIngredientes = (
+                          item.ingredientes || []
+                        ).reduce(
+                          (accIng, ingrediente) => accIng + ingrediente.valor,
+                          0
                         );
+
+                        // Soma o valor dos produtos e dos ingredientes ao acumulador
+                        return acc + valorProdutos + valorIngredientes;
                       }, 0)
                       .toFixed(2)}`} // Calcula valor total do carrinho
                     className="border border-gray-300 rounded-lg p-3 w-full bg-gray-100 text-gray-600"

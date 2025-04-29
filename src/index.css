@@ -12,6 +12,19 @@ code {
     monospace;
 }
 
+/* Remove as setas no Chrome, Safari, Edge e Opera */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Remove as setas no Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
