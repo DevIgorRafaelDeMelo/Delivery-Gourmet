@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FaPlus, FaMinus } from "react-icons/fa"; // Importar ícones do React Icons
-
+import logo from "./Abstract Chef Cooking Restaurant Free Logo.png";
 const produtos = {
   comidas: [
     {
@@ -169,25 +169,90 @@ const produtos = {
 function App() {
   const [selectedProduct, setSelectedProduct] = useState(null); // Estado para guardar o produto selecionado
   const [showCard, setShowCard] = useState(false); // Estado para controlar a exibição do card
+  const [showCardDrink, setShowCardDrink] = useState(false); // Estado para controlar a exibição do card
   const [quantity, setQuantity] = useState(1); // Quantidade inicial predefinida
   const [carrinho, setCarrinho] = useState([]);
-  const [mostrarCarrinho, setMostrarCarrinho] = useState(true); // Controle da visibilidade do carrinho
+  const [mostrarCarrinho, setMostrarCarrinho] = useState(false); // Controle da visibilidade do carrinho
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [selectedIngredients, setSelectedIngredients] = useState([]);
+  const [nome, setNome] = useState("");
+  const [endereco, setEndereco] = useState("");
+  const [formaPagamento, setFormaPagamento] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [complemento, setComplemento] = useState("");
+  const numeroTelefone = "5551980253115"; //numero do forenecedor
+  const [ingredients] = useState([
+    { nome: "Tomate", valor: 1.5 },
+    { nome: "Cebola", valor: 1.0 },
+    { nome: "Queijo", valor: 2.5 },
+    { nome: "Azeitonas", valor: 1.8 },
+  ]);
 
+  const handleEnviarWhatsApp = () => {
+    // Substitua pelo número correto
+    const valorTotal = carrinho
+      .reduce((acc, item) => {
+        const valorProdutos =
+          item.quantidade *
+          parseFloat(item.preco.replace("R$", "").replace(",", "."));
+        const valorIngredientes = (item.ingredientes || []).reduce(
+          (accIng, ingrediente) => accIng + ingrediente.valor,
+          0
+        );
+        return acc + valorProdutos + valorIngredientes;
+      }, 0)
+      .toFixed(2);
+
+    const mensagem = `
+  Informações da Compra:
+  - Nome: ${nome}
+  - Endereço: ${endereco}
+  - Telefone: ${telefone}
+  - Forma de Pagamento: ${formaPagamento}
+  - Complemento: ${complemento}
+  
+  Pedido:
+  ${carrinho
+    .map(
+      (item) =>
+        `- ${item.quantidade}x ${item.produto} ${
+          item.ingredientes.length > 0
+            ? `(Ingredientes: ${item.ingredientes
+                .map((i) => i.nome)
+                .join(", ")})`
+            : ""
+        } - R$${item.valorTotal}`
+    )
+    .join("\n")}
+  
+  Valor Total: R$${valorTotal}
+    `;
+
+    const mensagemCodificada = encodeURIComponent(mensagem);
+    const linkWhatsApp = `https://wa.me/${numeroTelefone}?text=${mensagemCodificada}`;
+    window.open(linkWhatsApp, "_blank"); // Abre o WhatsApp com a mensagem
+  };
   const handleComprar = (produto) => {
     setSelectedProduct(produto); // Define o produto selecionado
-    setShowCard(true); // Exibe o card
-  };
-  const [selectedIngredients, setSelectedIngredients] = useState([]);
-
-  const handleAddIngredient = (ingredient) => {
-    setSelectedIngredients([...selectedIngredients, ingredient]);
+    setShowCard(true);
+    // Exibe o card
   };
   const handleCloseCard = () => {
     setShowCard(false); // Fecha o card
     setSelectedProduct(null); // Limpa o produto selecionado
   };
-
+  const handleComprarDrink = (produto) => {
+    setSelectedProduct(produto); // Define o produto selecionado
+    setShowCardDrink(true);
+    // Exibe o card
+  };
+  const handleCloseCardDrink = () => {
+    setShowCardDrink(false); // Fecha o card
+    setSelectedProduct(null); // Limpa o produto selecionado
+  };
+  const handleAddIngredient = (ingredient) => {
+    setSelectedIngredients([...selectedIngredients, ingredient]);
+  };
   const handleRemoveIngredient = (ingredient) => {
     setSelectedIngredients(
       selectedIngredients.filter((i) => i.nome !== ingredient.nome)
@@ -220,29 +285,48 @@ function App() {
     setQuantity(1);
     handleCloseCard();
   };
+  const handleConfirmarCompraDrink = () => {
+    // Calcular o valor total (produto + ingredientes)
+    const valorTotal =
+      quantity *
+        parseFloat(selectedProduct?.preco.replace("R$", "").replace(",", ".")) +
+      selectedIngredients.reduce(
+        (acc, ingredient) => acc + ingredient.valor,
+        0
+      );
 
-  const [ingredients] = useState([
-    { nome: "Tomate", valor: 1.5 },
-    { nome: "Cebola", valor: 1.0 },
-    { nome: "Queijo", valor: 2.5 },
-    { nome: "Azeitonas", valor: 1.8 },
-  ]);
+    // Criar um novo item para o carrinho
+    const novoItem = {
+      produto: selectedProduct?.nome,
+      quantidade: quantity,
+      preco: selectedProduct?.preco,
+      ingredientes: selectedIngredients,
+      valorTotal: valorTotal.toFixed(2),
+    };
 
+    // Adicionar o novo item ao carrinho
+    setCarrinho((prevCarrinho) => [...prevCarrinho, novoItem]);
+
+    // Limpar os estados para uma nova seleção
+    setSelectedIngredients([]);
+    setQuantity(1);
+    handleCloseCardDrink();
+  };
   const handleRemoverItem = (index) => {
     setCarrinho((prevCarrinho) => prevCarrinho.filter((_, i) => i !== index));
   };
 
   return (
-    <div className="bg-gray-100 pb-20 min-h-screen text-center shadow-xl rounded-lg">
+    <div className="bg-neutral-100 pb-20 min-h-screen text-center shadow-xl rounded-lg">
       {/* Header estilizado */}
-      <header className="bg-teal-500 py-4 shadow-lg text-white">
-        <h1 className="text-2xl font-bold tracking-wide">
-          Restaurante <span className="italic">Sabor & Arte</span>
-        </h1>
-        <p className="text-md mt-1 font-light">
-          Sabores únicos para momentos especiais
-        </p>
+      <header className="bg-teal-700 py-4 shadow-lg text-white flex flex-col items-center rounded-b-3xl">
+        <img
+          src={logo}
+          alt="Logo do Restaurante"
+          className="w-34 h-34 rounded-full mb-2 border-4 border-white shadow-md"
+        />
       </header>
+
       {/* Seção Comidas */}
       <section className="w-3/5 mx-auto">
         <h2 className="text-3xl font-semibold text-teal-700 mb-4 mt-6">
@@ -265,7 +349,7 @@ function App() {
                   {comida.preco}
                 </p>
                 <button
-                  className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
+                  className="bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600"
                   onClick={() => handleComprar(comida)}
                 >
                   Comprar
@@ -391,13 +475,131 @@ function App() {
               <div className="flex justify-around mt-6">
                 <button
                   className="px-6 py-3 bg-gray-200 rounded-lg text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition duration-300 font-semibold"
-                  onClick={handleCloseCard}
+                  onClick={handleCloseCardDrink}
                 >
                   Cancelar
                 </button>
                 <button
                   className="px-6 py-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition duration-300 font-semibold"
                   onClick={handleConfirmarCompra} // Lógica do botão
+                >
+                  Confirmar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        <h2 className="text-3xl font-semibold text-teal-700 mb-4 mt-6">
+          Bebidas
+        </h2>
+        <ul className="list-none space-y-6 mb-8">
+          {produtos.bebidas.map((comida) => (
+            <li
+              key={comida.id}
+              className="p-4 bg-gray-50 border border-gray-200 rounded-lg shadow-md flex justify-between items-center"
+            >
+              <div className="flex flex-col">
+                <h3 className="text-2xl font-semibold text-gray-800">
+                  {comida.nome}
+                </h3>
+                <p className="text-gray-600">{comida.descricao}</p>
+              </div>
+              <div className="flex items-center space-x-4">
+                <p className="text-lg font-bold text-gray-800">
+                  {comida.preco}
+                </p>
+                <button
+                  className="bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600"
+                  onClick={() => handleComprarDrink(comida)}
+                >
+                  Comprar
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+        {/* Card para seleção de quantidade */}
+        {showCardDrink && (
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center">
+            <div className="bg-gray-50 p-12 rounded-2xl shadow-2xl max-w-lg w-full relative">
+              {/* Fechar Card */}
+              <button
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
+                onClick={handleCloseCardDrink}
+              >
+                ✕
+              </button>
+
+              {/* Nome do produto */}
+              <h2 className="text-3xl font-semibold mb-4 text-center text-teal-700">
+                {selectedProduct?.nome}
+              </h2>
+
+              {/* Valor unitário atualizado com o total */}
+              <p className="text-lg text-center text-gray-700 mb-6">
+                Valor unitário:{" "}
+                <span className="font-bold text-gray-800">
+                  R$
+                  {(
+                    quantity *
+                      parseFloat(
+                        selectedProduct?.preco
+                          .replace("R$", "")
+                          .replace(",", ".")
+                      ) +
+                    selectedIngredients.reduce(
+                      (acc, ingredient) => acc + ingredient.valor,
+                      0
+                    )
+                  ).toFixed(2)}
+                </span>
+              </p>
+              <div className="block mb-6">
+                <span className="block text-gray-700 font-medium mb-2">
+                  Quantidade:
+                </span>
+                <div className="flex items-center border border-gray-300 rounded-lg p-3 w-full focus-within:ring-2 focus-within:ring-teal-500">
+                  {/* Botão para diminuir quantidade */}
+                  <button
+                    className="text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded-lg transition duration-300 font-semibold"
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  >
+                    -
+                  </button>
+                  {/* Input para exibir quantidade */}
+                  <input
+                    type="number"
+                    min="1"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Number(e.target.value))}
+                    className="w-full text-center text-lg focus:outline-none"
+                    placeholder="Digite a quantidade"
+                    style={{
+                      MozAppearance: "textfield",
+                      WebkitAppearance: "none",
+                    }}
+                  />
+                  {/* Botão para aumentar quantidade */}
+                  <button
+                    className="text-white bg-teal-500 hover:bg-teal-600 px-3 py-1 rounded-lg transition duration-300 font-semibold"
+                    onClick={() => setQuantity(quantity + 1)}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Botões de ação */}
+              <div className="flex justify-around mt-6">
+                <button
+                  className="px-6 py-3 bg-gray-200 rounded-lg text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition duration-300 font-semibold"
+                  onClick={handleCloseCardDrink}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="px-6 py-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition duration-300 font-semibold"
+                  onClick={handleConfirmarCompraDrink} // Lógica do botão
                 >
                   Confirmar
                 </button>
@@ -600,18 +802,19 @@ function App() {
         {mostrarFormulario && (
           <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center">
             <div className="bg-white p-8 rounded-lg shadow-xl max-w-lg w-full relative">
-              {/* Botão para fechar o card */}
+              {/* Botão para fechar o formulário */}
               <button
                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
-                onClick={() => setMostrarFormulario(false)} // Fecha o card
+                onClick={() => setMostrarFormulario(false)} // Fecha o formulário
               >
                 ✕
               </button>
 
-              {/* Formulário de informações */}
+              {/* Cabeçalho */}
               <h2 className="text-2xl font-semibold text-teal-700 mb-4 text-center">
                 Informações da Compra
               </h2>
+
               <form>
                 {/* Campo Nome */}
                 <div className="mb-4">
@@ -620,6 +823,8 @@ function App() {
                   </label>
                   <input
                     type="text"
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
                     className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-teal-500 focus:outline-none"
                     placeholder="Digite seu nome"
                   />
@@ -632,11 +837,14 @@ function App() {
                   </label>
                   <input
                     type="text"
+                    value={endereco}
+                    onChange={(e) => setEndereco(e.target.value)}
                     className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-teal-500 focus:outline-none"
                     placeholder="Digite seu endereço"
                   />
                 </div>
 
+                {/* Valor Total */}
                 <div className="mb-4">
                   <label className="block text-gray-700 font-medium mb-2">
                     Valor Total:
@@ -669,16 +877,20 @@ function App() {
                   />
                 </div>
 
-                {/* Campo Forma de Pagamento */}
+                {/* Forma de Pagamento */}
                 <div className="mb-4">
                   <label className="block text-gray-700 font-medium mb-2">
                     Forma de Pagamento:
                   </label>
-                  <select className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-teal-500 focus:outline-none">
-                    <option>Cartão de Crédito</option>
-                    <option>Cartão de Débito</option>
-                    <option>Pix</option>
-                    <option>Dinheiro</option>
+                  <select
+                    value={formaPagamento}
+                    onChange={(e) => setFormaPagamento(e.target.value)}
+                    className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                  >
+                    <option value="Cartão de Crédito">Cartão de Crédito</option>
+                    <option value="Cartão de Débito">Cartão de Débito</option>
+                    <option value="Pix">Pix</option>
+                    <option value="Dinheiro">Dinheiro</option>
                   </select>
                 </div>
 
@@ -689,6 +901,8 @@ function App() {
                   </label>
                   <input
                     type="text"
+                    value={telefone}
+                    onChange={(e) => setTelefone(e.target.value)}
                     className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-teal-500 focus:outline-none"
                     placeholder="Digite seu telefone"
                   />
@@ -701,6 +915,8 @@ function App() {
                   </label>
                   <input
                     type="text"
+                    value={complemento}
+                    onChange={(e) => setComplemento(e.target.value)}
                     className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-teal-500 focus:outline-none"
                     placeholder="Digite o complemento"
                   />
@@ -718,9 +934,9 @@ function App() {
                   <button
                     type="submit"
                     className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition duration-300 font-semibold"
-                    onClick={() => alert("Compra concluída!")} // Exemplo de ação
+                    onClick={handleEnviarWhatsApp} // Função para enviar via WhatsApp
                   >
-                    Concluir
+                    Enviar para WhatsApp
                   </button>
                 </div>
               </form>
