@@ -5,150 +5,16 @@ import logo from "./Abstract Chef Cooking Restaurant Free Logo.png";
 function App() {
   const [produtos, setProdutos] = useState({
     comidas: [
-      {
-        id: 1,
-        nome: "Pizza",
-        descricao: "Deliciosa pizza de queijo",
-        preco: "R$ 25,00",
-        imagem: "pizza.jpg",
-      },
-      {
-        id: 2,
-        nome: "Hambúrguer",
-        descricao: "Hambúrguer suculento",
-        preco: "R$ 20,00",
-        imagem: "hamburguer.jpg",
-      },
-      {
-        id: 3,
-        nome: "Sushi",
-        descricao: "Sushi fresco com molho especial",
-        preco: "R$ 35,00",
-        imagem: "sushi.jpg",
-      },
-      {
-        id: 4,
-        nome: "Tacos",
-        descricao: "Tacos mexicanos com carne e guacamole",
-        preco: "R$ 18,00",
-        imagem: "tacos.jpg",
-      },
-      {
-        id: 5,
-        nome: "Lasanha",
-        descricao: "Lasanha recheada com molho de tomate",
-        preco: "R$ 30,00",
-        imagem: "lasanha.jpg",
-      },
-      {
-        id: 6,
-        nome: "Churrasco",
-        descricao: "Churrasco brasileiro bem temperado",
-        preco: "R$ 40,00",
-        imagem: "churrasco.jpg",
-      },
-      {
-        id: 7,
-        nome: "Espaguete",
-        descricao: "Macarrão ao molho pesto",
-        preco: "R$ 22,00",
-        imagem: "espaguete.jpg",
-      },
-      {
-        id: 8,
-        nome: "Risoto",
-        descricao: "Risoto de cogumelos trufados",
-        preco: "R$ 28,00",
-        imagem: "risoto.jpg",
-      },
-      {
-        id: 9,
-        nome: "Empada",
-        descricao: "Empada recheada de frango",
-        preco: "R$ 12,00",
-        imagem: "empada.jpg",
-      },
-      {
-        id: 10,
-        nome: "Salada",
-        descricao: "Salada fresca com molho especial",
-        preco: "R$ 15,00",
-        imagem: "salada.jpg",
-      },
+      { id: 1, nome: "Pizza", descricao: "Deliciosa pizza de queijo", preco: "25.00", imagem: "pizza.jpg" },
+      { id: 2, nome: "Hambúrguer", descricao: "Hambúrguer suculento", preco: "20.00", imagem: "hamburguer.jpg" },
+      { id: 3, nome: "Sushi", descricao: "Sushi fresco com molho especial", preco: "35.00", imagem: "sushi.jpg" }
     ],
     bebidas: [
-      {
-        id: 11,
-        nome: "Suco de Laranja",
-        descricao: "Natural e refrescante",
-        preco: "R$ 10,00",
-        imagem: "suco.jpg",
-      },
-      {
-        id: 12,
-        nome: "Refrigerante",
-        descricao: "Gelado e borbulhante",
-        preco: "R$ 8,00",
-        imagem: "refrigerante.jpg",
-      },
-      {
-        id: 13,
-        nome: "Café",
-        descricao: "Café quente e encorpado",
-        preco: "R$ 5,00",
-        imagem: "cafe.jpg",
-      },
-      {
-        id: 14,
-        nome: "Chá Gelado",
-        descricao: "Chá gelado com sabor de limão",
-        preco: "R$ 7,00",
-        imagem: "cha.jpg",
-      },
-      {
-        id: 15,
-        nome: "Milkshake",
-        descricao: "Milkshake cremoso de chocolate",
-        preco: "R$ 14,00",
-        imagem: "milkshake.jpg",
-      },
-      {
-        id: 16,
-        nome: "Vinho",
-        descricao: "Vinho tinto envelhecido",
-        preco: "R$ 50,00",
-        imagem: "vinho.jpg",
-      },
-      {
-        id: 17,
-        nome: "Água de Coco",
-        descricao: "Água de coco natural",
-        preco: "R$ 9,00",
-        imagem: "agua_coco.jpg",
-      },
-      {
-        id: 18,
-        nome: "Energético",
-        descricao: "Bebida energética para dar disposição",
-        preco: "R$ 12,00",
-        imagem: "energetico.jpg",
-      },
-      {
-        id: 19,
-        nome: "Batida de Morango",
-        descricao: "Batida cremosa de morango",
-        preco: "R$ 15,00",
-        imagem: "batida.jpg",
-      },
-      {
-        id: 20,
-        nome: "Limonada",
-        descricao: "Limonada refrescante e natural",
-        preco: "R$ 6,00",
-        imagem: "limonada.jpg",
-      },
-    ],
+      { id: 11, nome: "Suco de Laranja", descricao: "Natural e refrescante", preco: "10.00", imagem: "suco.jpg" },
+      { id: 12, nome: "Refrigerante", descricao: "Gelado e borbulhante", preco: "8.00", imagem: "refrigerante.jpg" }
+    ]
   });
+  
 
   const [selectedProduct, setSelectedProduct] = useState(null); // Estado para guardar o produto selecionado
   const [showCard, setShowCard] = useState(false); // Estado para controlar a exibição do card
@@ -323,35 +189,47 @@ function App() {
   const filtrarProdutos = () => {
     setTermoFiltro(pesquisa);
   };
-
   const abrirProduto = (produto) => {
     setProdutoSelecionado(produto);
   };
-
   const fecharProduto = () => {
     setProdutoSelecionado(null);
   };
-
   const toggleDiv = () => {
     setMostrarDiv(!mostrarDiv);
   };
-
   const alterarHorario = (dia, novoHorario) => {
     setHorarios((prevHorarios) => ({
       ...prevHorarios,
       [dia]: novoHorario,
     }));
   };
+  const atualizarProduto = (id, categoria, campo, valor) => {
+    setProdutos((prevProdutos) => ({
+      ...prevProdutos,
+      [categoria]: prevProdutos[categoria].map((produto) =>
+        produto.id === id ? { ...produto, [campo]: valor } : produto
+      ),
+    }));
+  
+    setProdutoSelecionado((prevProduto) => ({
+      ...prevProduto,
+      [campo]: valor,
+    }));
+  };
+  const [seçãoAtiva, setSeçãoAtiva] = useState("produtos");
+
+  
+
+  
 
   return (
     <div className="relative bg-neutral-100 pb-20 min-h-screen text-center shadow-xl rounded-lg">
       {/* Seção ADM */}
       {mostrarDiv && (
         <>
-          {/* Div que cobre toda a tela quando ativada, com scroll habilitado */}
-          <div className="fixed inset-0 bg-white z-1 flex flex-col items-center justify-start overflow-y-auto max-h-screen">
-            {/* Header fixo no topo */}
-            <header className="sticky top-0 w-full bg-teal-700 py-4 shadow-lg text-white flex flex-col items-center rounded-b-3xl z-50">
+
+            <header className="sticky top-0 w-full bg-teal-700 py-4 shadow-lg text-white flex flex-col items-center  z-50">
               <img
                 src={logo}
                 alt="Logo do Restaurante"
@@ -365,71 +243,111 @@ function App() {
                 ⚙️ {/* Ícone de configurações */}
               </button>
             </header>
-            {/* Barra de pesquisa logo abaixo do header */}
-            <div className="fixed top-40 w-full flex justify-end items-center gap-4 p-4  z-40">
-              <input
-                type="text"
-                placeholder="Pesquisar produto..."
-                value={pesquisa}
-                onChange={(e) => setPesquisa(e.target.value)}
-                className="p-3 border  rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-200"
-              />
 
-              <button
-                onClick={filtrarProdutos}
-                className="px-6 py-3 bg-teal-600 from-blue-500 to-indigo-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300"
+  
+          <div className="fixed inset-0 bg-white  flex flex-col items-center justify-start overflow-y-auto max-h-screen">
+         
+          <div className="fixed left-0 pt-[7%] h-screen bg-teal-700 flex flex-col items-center justify-start overflow-y-auto max-h-screen w-80 shadow-lg">
+            <div className="w-full flex flex-col items-center mt-6 bg-teal-700">
+              <div
+                onClick={() => {
+                  console.log("Clicado em Produtos");
+                  setSeçãoAtiva("produtos");
+                }}
+                className="w-80 py-6 text-center bg-teal-700 text-white shadow-lg cursor-pointer text-xl   hover:bg-teal-600 transition"
               >
-                🔍 Filtrar
-              </button>
-            </div>
-            {/* Horários de funcionamento com botão de edição e salvamento */}
-            <div className="mt-6 bg-gray-100 p-6 rounded-lg shadow-md w-96 text-center">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">
-                  Horários de Funcionamento
-                </h3>
-                <button
-                  className="text-gray-600 hover:text-gray-800 transition"
-                  onClick={() => setEditando(!editando)}
-                >
-                  <FaCog className="text-2xl" /> {/* Ícone de configuração */}
-                </button>
+                 Produtos
               </div>
 
-              <ul className="text-sm text-gray-700 mt-2 space-y-2">
-                {Object.entries(horarios).map(([dia, horario]) => (
-                  <li
-                    key={dia}
-                    className="flex justify-between bg-white p-2 rounded-md shadow"
-                  >
-                    <span className="font-medium">
-                      {dia.charAt(0).toUpperCase() + dia.slice(1)}:
-                    </span>
-                    {editando ? (
-                      <input
-                        type="text"
-                        value={horario}
-                        className="border border-gray-300 rounded p-1 text-center w-32"
-                        onChange={(e) => alterarHorario(dia, e.target.value)}
-                      />
-                    ) : (
-                      <span>{horario}</span>
-                    )}
-                  </li>
-                ))}
-              </ul>
+              <div
+                onClick={() => setSeçãoAtiva("pedidos")}
+                className="w-80 py-6 text-center bg-teal-700 text-white shadow-lg cursor-pointer text-xl   hover:bg-teal-600 transition"
+              >
+                 Pedidos
+              </div>
 
-              {editando && (
-                <button
-                  className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition"
-                  onClick={() => {
-                    setEditando(false);
-                  }}
-                >
-                  Salvar
-                </button>
-              )}
+              <div
+                onClick={() => setSeçãoAtiva("usuarios")}
+                className="w-80 py-6 text-center bg-teal-700 text-white cursor-pointer text-xl    hover:bg-teal-600 transition"
+              >
+                  Usuários
+              </div>
             </div>
+          </div>
+
+          {seçãoAtiva === "produtos" && (
+            <div>
+              <h2 className="text-lg font-bold mt-4">Gerenciamento de horarios</h2>
+              {/* Horários de funcionamento com botão de edição e salvamento */}
+              <div className="mt-6 bg-gray-100  mt-16  mt-[190px] p-6 rounded-lg shadow-md w-96 text-center">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">
+                    Horários de Funcionamento
+                  </h3>
+                  <button
+                    className="text-gray-600 hover:text-gray-800 transition"
+                    onClick={() => setEditando(!editando)}
+                  >
+                    <FaCog className="text-2xl" /> {/* Ícone de configuração */}
+                  </button>
+                </div>
+
+                <ul className="text-sm text-gray-700 mt-2 space-y-2">
+                  {Object.entries(horarios).map(([dia, horario]) => (
+                    <li
+                      key={dia}
+                      className="flex justify-between bg-white p-2 rounded-md shadow"
+                    >
+                      <span className="font-medium">
+                        {dia.charAt(0).toUpperCase() + dia.slice(1)}:
+                      </span>
+                      {editando ? (
+                        <input
+                          type="text"
+                          value={horario}
+                          className="border border-gray-300 rounded p-1 text-center w-32"
+                          onChange={(e) => alterarHorario(dia, e.target.value)}
+                        />
+                      ) : (
+                        <span>{horario}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+
+                {editando && (
+                  <button
+                    className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition"
+                    onClick={() => {
+                      setEditando(false);
+                    }}
+                  >
+                    Salvar
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+          {seçãoAtiva === "pedidos" && (
+            <div>
+              <h2 className="text-lg font-bold mt-4">Pedidos</h2>
+              
+              <div className="fixed top-40 w-full flex justify-end items-center gap-4 p-4  z-40">
+                <input
+                  type="text"
+                  placeholder="Pesquisar produto..."
+                  value={pesquisa}
+                  onChange={(e) => setPesquisa(e.target.value)}
+                  className="p-3 border  rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-200"
+                />
+
+                <button
+                  onClick={filtrarProdutos}
+                  className="px-6 py-3 bg-teal-600 from-blue-500 to-indigo-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300"
+                >
+                  🔍 Filtrar
+                </button>
+              </div>
             {/* Cards dos produtos */}
             <div className="mt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -439,7 +357,7 @@ function App() {
                     className="bg-white p-4 rounded-lg shadow-xl w-64 text-center"
                   >
                     <img
-                      src={produto.imagem}
+                      src={produtos.imagem}
                       alt={produto.nome}
                       className="w-full h-40 object-cover rounded-md"
                     />
@@ -451,9 +369,9 @@ function App() {
 
                     <button
                       onClick={() => abrirProduto(produto)}
-                      className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+                      className="mt-2 px-4 py-2 bg-blue-300 text-white rounded-md hover:bg-blue-600 transition"
                     >
-                      Abrir Produto
+                      Editar produto 
                     </button>
                   </div>
                 ))}
@@ -476,9 +394,9 @@ function App() {
 
                     <button
                       onClick={() => abrirProduto(produto)}
-                      className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+                      className="mt-2 px-4 py-2 bg-blue-300 text-white rounded-md hover:bg-blue-600 transition"
                     >
-                      Abrir Produto
+                       Editar produto 
                     </button>
                   </div>
                 ))}
@@ -511,13 +429,56 @@ function App() {
                 </div>
               )}
             </div>
-            {/* Botão de Fechar */}
-            <button
-              className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg"
-              onClick={toggleDiv}
-            >
-              Fechar
-            </button>
+            {/* modal dos produtos */}  
+            {produtoSelecionado && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+              <div className="bg-white p-6 rounded-md shadow-lg w-80 text-center">
+                <input
+                  type="text"
+                  value={produtoSelecionado.nome}
+                  onChange={(e) => atualizarProduto(produtoSelecionado.id, "comidas", "nome", e.target.value)}
+                  className="text-lg font-semibold mb-4 text-center border border-gray-300 rounded-md px-2"
+                />
+
+                <input
+                  type="text"
+                  value={produtoSelecionado.preco}
+                  onChange={(e) => atualizarProduto(produtoSelecionado.id, "comidas", "preco", e.target.value)}
+                  className="text-lg font-bold mt-2 text-center border border-gray-300 rounded-md px-2"
+                />
+
+                <input
+                  type="text"
+                  value={produtoSelecionado.imagem}
+                  onChange={(e) => atualizarProduto(produtoSelecionado.id, "comidas", "imagem", e.target.value)}
+                  className="text-sm text-gray-600 mt-2 border border-gray-300 rounded-md px-2"
+                  placeholder="URL da imagem"
+                />
+
+                <img src={produtoSelecionado.imagem} alt={produtoSelecionado.nome} className="w-full h-40 object-cover rounded-md mb-2" />
+
+                <button
+                  onClick={fecharProduto}
+                  className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition w-full"
+                >
+                  salvar
+                </button>
+              </div>
+            </div>
+            )}
+
+            </div>
+          )}
+          {seçãoAtiva === "usuarios" && (
+            <div>
+              <h2 className="text-lg font-bold mt-4">Usuários</h2>
+              {/* Código de gerenciamento de usuários */}
+            </div>
+          )}
+
+
+           
+            <div className="mb-40"></div>
           </div>
         </>
       )}
