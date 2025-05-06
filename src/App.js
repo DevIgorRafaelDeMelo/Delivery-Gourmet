@@ -1,20 +1,91 @@
 import React, { useState } from "react";
-import { FaPlus, FaMinus, FaCog } from "react-icons/fa"; // Importar ícones do React Icons
+import { FaPlus, FaMinus } from "react-icons/fa"; // Importar ícones do React Icons
 import logo from "./Abstract Chef Cooking Restaurant Free Logo.png";
 
 function App() {
   const [produtos, setProdutos] = useState({
     comidas: [
-      { id: 1, nome: "Pizza", descricao: "Deliciosa pizza de queijo", preco: "25.00", imagem: "pizza.jpg" },
-      { id: 2, nome: "Hambúrguer", descricao: "Hambúrguer suculento", preco: "20.00", imagem: "hamburguer.jpg" },
-      { id: 3, nome: "Sushi", descricao: "Sushi fresco com molho especial", preco: "35.00", imagem: "sushi.jpg" }
+      {
+        id: 1,
+        nome: "Pizza",
+        descricao: "Deliciosa pizza de queijo",
+        preco: "25.00",
+        imagem: "pizza.jpg",
+      },
+      {
+        id: 2,
+        nome: "Hambúrguer",
+        descricao: "Hambúrguer suculento",
+        preco: "20.00",
+        imagem: "hamburguer.jpg",
+      },
+      {
+        id: 3,
+        nome: "Sushi",
+        descricao: "Sushi fresco com molho especial",
+        preco: "35.00",
+        imagem: "sushi.jpg",
+      },
+      {
+        id: 1,
+        nome: "Pizza",
+        descricao: "Deliciosa pizza de queijo",
+        preco: "25.00",
+        imagem: "pizza.jpg",
+      },
+      {
+        id: 2,
+        nome: "Hambúrguer",
+        descricao: "Hambúrguer suculento",
+        preco: "20.00",
+        imagem: "hamburguer.jpg",
+      },
+      {
+        id: 3,
+        nome: "Sushi",
+        descricao: "Sushi fresco com molho especial",
+        preco: "35.00",
+        imagem: "sushi.jpg",
+      },
+      {
+        id: 1,
+        nome: "Pizza",
+        descricao: "Deliciosa pizza de queijo",
+        preco: "25.00",
+        imagem: "pizza.jpg",
+      },
+      {
+        id: 2,
+        nome: "Hambúrguer",
+        descricao: "Hambúrguer suculento",
+        preco: "20.00",
+        imagem: "hamburguer.jpg",
+      },
+      {
+        id: 3,
+        nome: "Sushi",
+        descricao: "Sushi fresco com molho especial",
+        preco: "35.00",
+        imagem: "sushi.jpg",
+      },
     ],
     bebidas: [
-      { id: 11, nome: "Suco de Laranja", descricao: "Natural e refrescante", preco: "10.00", imagem: "suco.jpg" },
-      { id: 12, nome: "Refrigerante", descricao: "Gelado e borbulhante", preco: "8.00", imagem: "refrigerante.jpg" }
-    ]
+      {
+        id: 11,
+        nome: "Suco de Laranja",
+        descricao: "Natural e refrescante",
+        preco: "10.00",
+        imagem: "suco.jpg",
+      },
+      {
+        id: 12,
+        nome: "Refrigerante",
+        descricao: "Gelado e borbulhante",
+        preco: "8.00",
+        imagem: "refrigerante.jpg",
+      },
+    ],
   });
-  
 
   const [selectedProduct, setSelectedProduct] = useState(null); // Estado para guardar o produto selecionado
   const [showCard, setShowCard] = useState(false); // Estado para controlar a exibição do card
@@ -35,6 +106,9 @@ function App() {
   const [termoFiltro, setTermoFiltro] = useState(""); // Estado para armazenar o ter
   const [editando, setEditando] = useState(false);
   const [produtoSelecionado, setProdutoSelecionado] = useState(null);
+  const [seçãoAtiva, setSeçãoAtiva] = useState("produtos");
+  const [visivel, setVisivel] = useState(true);
+
   const produtosFiltrados = {
     comidas: produtos.comidas.filter((produto) =>
       produto.nome.toLowerCase().includes(pesquisa.toLowerCase())
@@ -52,7 +126,6 @@ function App() {
     sabado: "11h00 - 23h00",
     domingo: "11h00 - 21h00",
   });
-
   const [ingredients] = useState([
     { nome: "Tomate", valor: 1.5 },
     { nome: "Cebola", valor: 1.0 },
@@ -211,273 +284,328 @@ function App() {
         produto.id === id ? { ...produto, [campo]: valor } : produto
       ),
     }));
-  
+
     setProdutoSelecionado((prevProduto) => ({
       ...prevProduto,
       [campo]: valor,
     }));
   };
-  const [seçãoAtiva, setSeçãoAtiva] = useState("produtos");
-
-  
-
-  
 
   return (
     <div className="relative bg-neutral-100 pb-20 min-h-screen text-center shadow-xl rounded-lg">
       {/* Seção ADM */}
       {mostrarDiv && (
         <>
-
-            <header className="sticky top-0 w-full bg-teal-700 py-4 shadow-lg text-white flex flex-col items-center  z-50">
-              <img
-                src={logo}
-                alt="Logo do Restaurante"
-                className="w-20 h-20 rounded-full border-4 border-white shadow-md"
-              />
-              <h2 className="text-xl font-bold mt-2">Delivery Gourmet</h2>
-              <button
-                className="absolute top-4 right-4 bg-gray-700 text-white p-3 rounded-full shadow-lg"
-                onClick={toggleDiv}
-              >
-                ⚙️ {/* Ícone de configurações */}
-              </button>
-            </header>
-
-  
+          <header className="sticky top-0 w-full  bg-teal-700 py-5 shadow-lg text-white flex flex-col items-center  z-1">
+            <img
+              src={logo}
+              alt="Logo do Restaurante"
+              className="w-20 h-20 rounded-full border-4 border-white shadow-md"
+            />
+            <h2 className="text-xl font-bold mt-2">Delivery Gourmet</h2>
+            <button
+              className="absolute top-4 right-4 bg-gray-700 text-white p-3 rounded-full shadow-lg"
+              onClick={toggleDiv}
+            >
+              ⚙️ {/* Ícone de configurações */}
+            </button>
+          </header>
           <div className="fixed inset-0 bg-white  flex flex-col items-center justify-start overflow-y-auto max-h-screen">
-         
-          <div className="fixed left-0 pt-[7%] h-screen bg-teal-700 flex flex-col items-center justify-start overflow-y-auto max-h-screen w-80 shadow-lg">
-            <div className="w-full flex flex-col items-center mt-6 bg-teal-700">
-              <div
-                onClick={() => {
-                  console.log("Clicado em Produtos");
-                  setSeçãoAtiva("produtos");
-                }}
-                className="w-80 py-6 text-center bg-teal-700 text-white shadow-lg cursor-pointer text-xl   hover:bg-teal-600 transition"
-              >
-                 Produtos
-              </div>
+            <div className="relative">
+              {/* Botão para alternar a aba */}
+              <div>
+                {/* Aba lateral */}
+                <div
+                  className={`fixed left-0   items-center justify-start overflow-y-auto  w-[30%]  transition-transform duration-500 ease-in-out `}
+                >
+                  <div className="flex pt-[20%] w-[25%]">
+                    {/* Primeiro filho */}
+                    <div
+                      className={`flex-1 bg-teal-700 max-h-screen h-screen  ${
+                        visivel ? "translate-x-0" : "-translate-x-full"
+                      }`}
+                    >
+                      <div className="w-full flex flex-col items-center  mt-6 bg-teal-700">
+                        <div
+                          onClick={() => setSeçãoAtiva("horarios")}
+                          className="w-80 py-6 text-center bg-teal-700 mt-40 text-white shadow-lg cursor-pointer text-xl hover:bg-teal-600 transition"
+                        >
+                          Horários
+                        </div>
 
-              <div
-                onClick={() => setSeçãoAtiva("pedidos")}
-                className="w-80 py-6 text-center bg-teal-700 text-white shadow-lg cursor-pointer text-xl   hover:bg-teal-600 transition"
-              >
-                 Pedidos
-              </div>
+                        <div
+                          onClick={() => setSeçãoAtiva("produtos")}
+                          className="w-80 py-6 text-center bg-teal-700 text-white shadow-lg cursor-pointer text-xl hover:bg-teal-600 transition"
+                        >
+                          Produtos
+                        </div>
 
-              <div
-                onClick={() => setSeçãoAtiva("usuarios")}
-                className="w-80 py-6 text-center bg-teal-700 text-white cursor-pointer text-xl    hover:bg-teal-600 transition"
-              >
-                  Usuários
+                        <div
+                          onClick={() => setSeçãoAtiva("pedidos")}
+                          className="w-80 py-6 text-center bg-teal-700 text-white cursor-pointer text-xl hover:bg-teal-600 transition"
+                        >
+                          Pedidos
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Segundo filho */}
+                    <div className="flex-1 w-[5%]">
+                      <button
+                        onClick={() => setVisivel(!visivel)}
+                        className="px-4 py-2 pt-12 bg-teal-700 text-white hover:bg-teal-600 transition rounded-b-lg overflow-visible"
+                      >
+                        {visivel ? "Ocultar" : "Mostrar"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          {seçãoAtiva === "produtos" && (
-            <div>
-              <h2 className="text-lg font-bold mt-4">Gerenciamento de horarios</h2>
-              {/* Horários de funcionamento com botão de edição e salvamento */}
-              <div className="mt-6 bg-gray-100  mt-16  mt-[190px] p-6 rounded-lg shadow-md w-96 text-center">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">
-                    Horários de Funcionamento
-                  </h3>
+            {seçãoAtiva === "horarios" && (
+              <div className=" mt-[190px] w-[50%]">
+                <h2 className="text-lg font-bold mt-4">
+                  Gerenciamento de horarios
+                </h2>
+                {/* Horários de funcionamento com botão de edição e salvamento */}
+                <div className="mt-6 bg-gray-100  mt-16  p-6 rounded-lg shadow-md  text-center">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">
+                      Horários de Funcionamento
+                    </h3>
+                  </div>
+
+                  <ul className="text-sm text-gray-700 mt-2 space-y-2">
+                    {Object.entries(horarios).map(([dia, horario]) => (
+                      <li
+                        key={dia}
+                        className="flex justify-between  p-2 rounded-md shadow"
+                      >
+                        <span className="font-medium">
+                          {dia.charAt(0).toUpperCase() + dia.slice(1)}:
+                        </span>
+                        {editando ? (
+                          <input
+                            type="text"
+                            value={horario}
+                            placeholder="HH:MM - HH:MM"
+                            className="flex justify-between bg-white p-2 rounded-md shadow"
+                            onChange={(e) =>
+                              alterarHorario(dia, e.target.value)
+                            }
+                            pattern="([01]\d|2[0-3]):[0-5]\d - ([01]\d|2[0-3]):[0-5]\d"
+                            title="Formato esperado: HH:MM - HH:MM"
+                          />
+                        ) : (
+                          <span>{horario}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {!editando && (
+                    <button
+                      className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition"
+                      onClick={() => setEditando(!editando)}
+                    >
+                      Editar
+                    </button>
+                  )}
+
+                  {editando && (
+                    <button
+                      className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition"
+                      onClick={() => {
+                        setEditando(false);
+                      }}
+                    >
+                      Salvar
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+            {seçãoAtiva === "produtos" && (
+              <div className=" mt-[10%] ">
+                <h2 className="text-lg font-bold mt-4">Pedidos</h2>
+
+                <div className="text-center  flex justify-end items-center gap-4 p-4 z-40">
+                  <input
+                    type="text"
+                    placeholder="Pesquisar produto..."
+                    value={pesquisa}
+                    onChange={(e) => setPesquisa(e.target.value)}
+                    className="p-3 border  rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-200"
+                  />
+
                   <button
-                    className="text-gray-600 hover:text-gray-800 transition"
-                    onClick={() => setEditando(!editando)}
+                    onClick={filtrarProdutos}
+                    className="px-6 py-3 bg-teal-600 from-blue-500 to-indigo-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300"
                   >
-                    <FaCog className="text-2xl" /> {/* Ícone de configuração */}
+                    🔍 Filtrar
                   </button>
                 </div>
-
-                <ul className="text-sm text-gray-700 mt-2 space-y-2">
-                  {Object.entries(horarios).map(([dia, horario]) => (
-                    <li
-                      key={dia}
-                      className="flex justify-between bg-white p-2 rounded-md shadow"
-                    >
-                      <span className="font-medium">
-                        {dia.charAt(0).toUpperCase() + dia.slice(1)}:
-                      </span>
-                      {editando ? (
-                        <input
-                          type="text"
-                          value={horario}
-                          className="border border-gray-300 rounded p-1 text-center w-32"
-                          onChange={(e) => alterarHorario(dia, e.target.value)}
+                {/* Cards dos produtos */}
+                <div className="">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {produtosFiltrados.comidas.map((produto) => (
+                      <div
+                        key={produto.id}
+                        className="bg-white p-4 rounded-lg shadow-xl w-64 text-center"
+                      >
+                        <img
+                          src={produto.imagem}
+                          alt={produto.nome}
+                          className="w-full h-40 object-cover rounded-md"
                         />
-                      ) : (
-                        <span>{horario}</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
+                        <h3 className="text-lg font-semibold mt-2">
+                          {produto.nome}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {produto.descricao}
+                        </p>
+                        <p className="text-lg font-bold mt-2">
+                          {produto.preco}
+                        </p>
 
-                {editando && (
-                  <button
-                    className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition"
-                    onClick={() => {
-                      setEditando(false);
-                    }}
-                  >
-                    Salvar
-                  </button>
+                        <button
+                          onClick={() => abrirProduto(produto)}
+                          className="mt-2 px-4 py-2 bg-blue-300 text-white rounded-md hover:bg-blue-600 transition"
+                        >
+                          Editar produto
+                        </button>
+                      </div>
+                    ))}
+
+                    {produtosFiltrados.bebidas.map((produto) => (
+                      <div
+                        key={produto.id}
+                        className="bg-white p-4 rounded-lg shadow-xl w-64 text-center"
+                      >
+                        <img
+                          src={produto.imagem}
+                          alt={produto.nome}
+                          className="w-full h-40 object-cover rounded-md"
+                        />
+                        <h3 className="text-lg font-semibold mt-2">
+                          {produto.nome}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {produto.descricao}
+                        </p>
+                        <p className="text-lg font-bold mt-2">
+                          {produto.preco}
+                        </p>
+
+                        <button
+                          onClick={() => abrirProduto(produto)}
+                          className="mt-2 px-4 py-2 bg-blue-300 text-white rounded-md hover:bg-blue-600 transition"
+                        >
+                          Editar produto
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {produtoSelecionado && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                      <div className="bg-white p-6 rounded-md shadow-lg w-80 text-center">
+                        <h2 className="text-lg font-semibold mb-4">
+                          {produtoSelecionado.nome}
+                        </h2>
+                        <img
+                          src={produtoSelecionado.imagem}
+                          alt={produtoSelecionado.nome}
+                          className="w-full h-40 object-cover rounded-md mb-2"
+                        />
+                        <p className="text-sm text-gray-600">
+                          {produtoSelecionado.descricao}
+                        </p>
+                        <p className="text-lg font-bold mt-2">
+                          {produtoSelecionado.preco}
+                        </p>
+
+                        <button
+                          onClick={fecharProduto}
+                          className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition w-full"
+                        >
+                          Fechar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {/* modal dos produtos */}
+                {produtoSelecionado && (
+                  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white p-6 rounded-md shadow-lg w-80 text-center">
+                      <input
+                        type="text"
+                        value={produtoSelecionado.nome}
+                        onChange={(e) =>
+                          atualizarProduto(
+                            produtoSelecionado.id,
+                            "comidas",
+                            "nome",
+                            e.target.value
+                          )
+                        }
+                        className="text-lg font-semibold mb-4 text-center border border-gray-300 rounded-md px-2"
+                      />
+
+                      <input
+                        type="text"
+                        value={produtoSelecionado.preco}
+                        onChange={(e) =>
+                          atualizarProduto(
+                            produtoSelecionado.id,
+                            "comidas",
+                            "preco",
+                            e.target.value
+                          )
+                        }
+                        className="text-lg font-bold mt-2 text-center border border-gray-300 rounded-md px-2"
+                      />
+
+                      <input
+                        type="text"
+                        value={produtoSelecionado.imagem}
+                        onChange={(e) =>
+                          atualizarProduto(
+                            produtoSelecionado.id,
+                            "comidas",
+                            "imagem",
+                            e.target.value
+                          )
+                        }
+                        className="text-sm text-gray-600 mt-2 border border-gray-300 rounded-md px-2"
+                        placeholder="URL da imagem"
+                      />
+
+                      <img
+                        src={produtoSelecionado.imagem}
+                        alt={produtoSelecionado.nome}
+                        className="w-full h-40 object-cover rounded-md mb-2"
+                      />
+
+                      <button
+                        onClick={fecharProduto}
+                        className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition w-full"
+                      >
+                        salvar
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
-            </div>
-          )}
-          {seçãoAtiva === "pedidos" && (
-            <div>
-              <h2 className="text-lg font-bold mt-4">Pedidos</h2>
-              
-              <div className="fixed top-40 w-full flex justify-end items-center gap-4 p-4  z-40">
-                <input
-                  type="text"
-                  placeholder="Pesquisar produto..."
-                  value={pesquisa}
-                  onChange={(e) => setPesquisa(e.target.value)}
-                  className="p-3 border  rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-200"
-                />
-
-                <button
-                  onClick={filtrarProdutos}
-                  className="px-6 py-3 bg-teal-600 from-blue-500 to-indigo-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300"
-                >
-                  🔍 Filtrar
-                </button>
-              </div>
-            {/* Cards dos produtos */}
-            <div className="mt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {produtosFiltrados.comidas.map((produto) => (
-                  <div
-                    key={produto.id}
-                    className="bg-white p-4 rounded-lg shadow-xl w-64 text-center"
-                  >
-                    <img
-                      src={produtos.imagem}
-                      alt={produto.nome}
-                      className="w-full h-40 object-cover rounded-md"
-                    />
-                    <h3 className="text-lg font-semibold mt-2">
-                      {produto.nome}
-                    </h3>
-                    <p className="text-sm text-gray-600">{produto.descricao}</p>
-                    <p className="text-lg font-bold mt-2">{produto.preco}</p>
-
-                    <button
-                      onClick={() => abrirProduto(produto)}
-                      className="mt-2 px-4 py-2 bg-blue-300 text-white rounded-md hover:bg-blue-600 transition"
-                    >
-                      Editar produto 
-                    </button>
-                  </div>
-                ))}
-
-                {produtosFiltrados.bebidas.map((produto) => (
-                  <div
-                    key={produto.id}
-                    className="bg-white p-4 rounded-lg shadow-xl w-64 text-center"
-                  >
-                    <img
-                      src={produto.imagem}
-                      alt={produto.nome}
-                      className="w-full h-40 object-cover rounded-md"
-                    />
-                    <h3 className="text-lg font-semibold mt-2">
-                      {produto.nome}
-                    </h3>
-                    <p className="text-sm text-gray-600">{produto.descricao}</p>
-                    <p className="text-lg font-bold mt-2">{produto.preco}</p>
-
-                    <button
-                      onClick={() => abrirProduto(produto)}
-                      className="mt-2 px-4 py-2 bg-blue-300 text-white rounded-md hover:bg-blue-600 transition"
-                    >
-                       Editar produto 
-                    </button>
-                  </div>
-                ))}
-              </div>
-              {produtoSelecionado && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                  <div className="bg-white p-6 rounded-md shadow-lg w-80 text-center">
-                    <h2 className="text-lg font-semibold mb-4">
-                      {produtoSelecionado.nome}
-                    </h2>
-                    <img
-                      src={produtoSelecionado.imagem}
-                      alt={produtoSelecionado.nome}
-                      className="w-full h-40 object-cover rounded-md mb-2"
-                    />
-                    <p className="text-sm text-gray-600">
-                      {produtoSelecionado.descricao}
-                    </p>
-                    <p className="text-lg font-bold mt-2">
-                      {produtoSelecionado.preco}
-                    </p>
-
-                    <button
-                      onClick={fecharProduto}
-                      className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition w-full"
-                    >
-                      Fechar
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-            {/* modal dos produtos */}  
-            {produtoSelecionado && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-              <div className="bg-white p-6 rounded-md shadow-lg w-80 text-center">
-                <input
-                  type="text"
-                  value={produtoSelecionado.nome}
-                  onChange={(e) => atualizarProduto(produtoSelecionado.id, "comidas", "nome", e.target.value)}
-                  className="text-lg font-semibold mb-4 text-center border border-gray-300 rounded-md px-2"
-                />
-
-                <input
-                  type="text"
-                  value={produtoSelecionado.preco}
-                  onChange={(e) => atualizarProduto(produtoSelecionado.id, "comidas", "preco", e.target.value)}
-                  className="text-lg font-bold mt-2 text-center border border-gray-300 rounded-md px-2"
-                />
-
-                <input
-                  type="text"
-                  value={produtoSelecionado.imagem}
-                  onChange={(e) => atualizarProduto(produtoSelecionado.id, "comidas", "imagem", e.target.value)}
-                  className="text-sm text-gray-600 mt-2 border border-gray-300 rounded-md px-2"
-                  placeholder="URL da imagem"
-                />
-
-                <img src={produtoSelecionado.imagem} alt={produtoSelecionado.nome} className="w-full h-40 object-cover rounded-md mb-2" />
-
-                <button
-                  onClick={fecharProduto}
-                  className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition w-full"
-                >
-                  salvar
-                </button>
-              </div>
-            </div>
             )}
-
-            </div>
-          )}
-          {seçãoAtiva === "usuarios" && (
-            <div>
-              <h2 className="text-lg font-bold mt-4">Usuários</h2>
-              {/* Código de gerenciamento de usuários */}
-            </div>
-          )}
-
-
-           
+            {seçãoAtiva === "pedidos" && (
+              <div>
+                <h2 className="text-lg font-bold mt-4">Usuários</h2>
+                {/* Código de gerenciamento de usuários */}
+              </div>
+            )}
             <div className="mb-40"></div>
           </div>
         </>
