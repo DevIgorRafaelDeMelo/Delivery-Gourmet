@@ -1,91 +1,10 @@
 import React, { useState } from "react";
 import { FaPlus, FaMinus } from "react-icons/fa"; // Importar ícones do React Icons
 import logo from "./Abstract Chef Cooking Restaurant Free Logo.png";
+import produtos from "./Banco/Produto";
 
 function App() {
-  const [produtos, setProdutos] = useState({
-    comidas: [
-      {
-        id: 1,
-        nome: "Pizza",
-        descricao: "Deliciosa pizza de queijo",
-        preco: "25.00",
-        imagem: "pizza.jpg",
-      },
-      {
-        id: 2,
-        nome: "Hambúrguer",
-        descricao: "Hambúrguer suculento",
-        preco: "20.00",
-        imagem: "hamburguer.jpg",
-      },
-      {
-        id: 3,
-        nome: "Sushi",
-        descricao: "Sushi fresco com molho especial",
-        preco: "35.00",
-        imagem: "sushi.jpg",
-      },
-      {
-        id: 1,
-        nome: "Pizza",
-        descricao: "Deliciosa pizza de queijo",
-        preco: "25.00",
-        imagem: "pizza.jpg",
-      },
-      {
-        id: 2,
-        nome: "Hambúrguer",
-        descricao: "Hambúrguer suculento",
-        preco: "20.00",
-        imagem: "hamburguer.jpg",
-      },
-      {
-        id: 3,
-        nome: "Sushi",
-        descricao: "Sushi fresco com molho especial",
-        preco: "35.00",
-        imagem: "sushi.jpg",
-      },
-      {
-        id: 1,
-        nome: "Pizza",
-        descricao: "Deliciosa pizza de queijo",
-        preco: "25.00",
-        imagem: "pizza.jpg",
-      },
-      {
-        id: 2,
-        nome: "Hambúrguer",
-        descricao: "Hambúrguer suculento",
-        preco: "20.00",
-        imagem: "hamburguer.jpg",
-      },
-      {
-        id: 3,
-        nome: "Sushi",
-        descricao: "Sushi fresco com molho especial",
-        preco: "35.00",
-        imagem: "sushi.jpg",
-      },
-    ],
-    bebidas: [
-      {
-        id: 11,
-        nome: "Suco de Laranja",
-        descricao: "Natural e refrescante",
-        preco: "10.00",
-        imagem: "suco.jpg",
-      },
-      {
-        id: 12,
-        nome: "Refrigerante",
-        descricao: "Gelado e borbulhante",
-        preco: "8.00",
-        imagem: "refrigerante.jpg",
-      },
-    ],
-  });
+  const [produtosState, setProdutos] = useState(produtos);
 
   const [selectedProduct, setSelectedProduct] = useState(null); // Estado para guardar o produto selecionado
   const [showCard, setShowCard] = useState(false); // Estado para controlar a exibição do card
@@ -94,6 +13,7 @@ function App() {
   const [carrinho, setCarrinho] = useState([]);
   const [mostrarCarrinho, setMostrarCarrinho] = useState(false); // Controle da visibilidade do carrinho
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [mostrarFormularioCard, setMostrarFormularioCard] = useState(false);
   const [selectedIngredients, setSelectedIngredients] = useState([]);
   const [pesquisa, setPesquisa] = useState("");
   const [nome, setNome] = useState("");
@@ -110,10 +30,10 @@ function App() {
   const [visivel, setVisivel] = useState(true);
 
   const produtosFiltrados = {
-    comidas: produtos.comidas.filter((produto) =>
+    comidas: produtosState.comidas.filter((produto) =>
       produto.nome.toLowerCase().includes(pesquisa.toLowerCase())
     ),
-    bebidas: produtos.bebidas.filter((produto) =>
+    bebidas: produtosState.bebidas.filter((produto) =>
       produto.nome.toLowerCase().includes(pesquisa.toLowerCase())
     ),
   };
@@ -290,6 +210,26 @@ function App() {
       [campo]: valor,
     }));
   };
+  const [novoProduto, setNovoProduto] = useState({
+    nome: "",
+    descricao: "",
+    preco: "",
+    imagem: "",
+  });
+
+  const adicionarProduto = () => {
+    if (!novoProduto.nome || !novoProduto.preco) {
+      alert("Preencha todos os campos!");
+      return;
+    }
+
+    setProdutos({
+      ...produtosState,
+      comidas: [...produtosState.comidas, { id: Date.now(), ...novoProduto }],
+    });
+
+    setNovoProduto({ nome: "", descricao: "", preco: "", imagem: "" }); // Resetando o formulário
+  };
 
   return (
     <div className="relative bg-neutral-100 pb-20 min-h-screen text-center shadow-xl rounded-lg">
@@ -318,17 +258,17 @@ function App() {
                 <div
                   className={`fixed left-0   items-center justify-start overflow-y-auto  w-[30%]  transition-transform duration-500 ease-in-out `}
                 >
-                  <div className="flex pt-[20%] w-[25%]">
+                  <div className="flex  w-[25%]">
                     {/* Primeiro filho */}
                     <div
                       className={`flex-1 bg-teal-700 max-h-screen h-screen  ${
                         visivel ? "translate-x-0" : "-translate-x-full"
                       }`}
                     >
-                      <div className="w-full flex flex-col items-center  mt-6 bg-teal-700">
+                      <div className="w-full flex flex-col items-center  bg-teal-700">
                         <div
                           onClick={() => setSeçãoAtiva("horarios")}
-                          className="w-80 py-6 text-center bg-teal-700 mt-40 text-white shadow-lg cursor-pointer text-xl hover:bg-teal-600 transition"
+                          className="w-80 py-6 text-center bg-teal-700 mt-45 text-white shadow-lg cursor-pointer text-xl hover:bg-teal-600 transition"
                         >
                           Horários
                         </div>
@@ -345,6 +285,12 @@ function App() {
                           className="w-80 py-6 text-center bg-teal-700 text-white cursor-pointer text-xl hover:bg-teal-600 transition"
                         >
                           Pedidos
+                        </div>
+                        <div
+                           
+                          className="w-full py-6 text-center bg-teal-700 text-white fixed bottom-0"
+                        >
+                          V0.1 07.05.25 Devsystem 64 
                         </div>
                       </div>
                     </div>
@@ -428,7 +374,87 @@ function App() {
             )}
             {seçãoAtiva === "produtos" && (
               <div className=" mt-[10%] ">
-                <h2 className="text-lg font-bold mt-4">Pedidos</h2>
+                <button
+                  onClick={() => setMostrarFormularioCard(true)}
+                  className="fixed bottom-4 right-4 px-6 py-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-all duration-300"
+                >
+                   Adicionar Produto
+                </button>
+                {mostrarFormularioCard && (
+                  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white p-4 rounded-lg shadow-xl w-64">
+                      <h3 className="text-lg font-semibold mt-2">
+                        Adicionar Produto
+                      </h3>
+
+                      <input
+                        type="text"
+                        placeholder="Nome do produto"
+                        value={novoProduto.nome}
+                        onChange={(e) =>
+                          setNovoProduto({
+                            ...novoProduto,
+                            nome: e.target.value,
+                          })
+                        }
+                        className="mt-2 p-2 border border-gray-300 rounded-md w-full"
+                      />
+
+                      <input
+                        type="text"
+                        placeholder="Descrição"
+                        value={novoProduto.descricao}
+                        onChange={(e) =>
+                          setNovoProduto({
+                            ...novoProduto,
+                            descricao: e.target.value,
+                          })
+                        }
+                        className="mt-2 p-2 border border-gray-300 rounded-md w-full"
+                      />
+
+                      <input
+                        type="text"
+                        placeholder="Preço"
+                        value={novoProduto.preco}
+                        onChange={(e) =>
+                          setNovoProduto({
+                            ...novoProduto,
+                            preco: e.target.value,
+                          })
+                        }
+                        className="mt-2 p-2 border border-gray-300 rounded-md w-full"
+                      />
+
+                      <input
+                        type="text"
+                        placeholder="URL da Imagem"
+                        value={novoProduto.imagem}
+                        onChange={(e) =>
+                          setNovoProduto({
+                            ...novoProduto,
+                            imagem: e.target.value,
+                          })
+                        }
+                        className="mt-2 p-2 border border-gray-300 rounded-md w-full"
+                      />
+
+                      <button
+                        onClick={adicionarProduto}
+                        className="mt-2 px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition"
+                      >
+                        Adicionar Produto
+                      </button>
+
+                      <button
+                        onClick={() => setMostrarFormularioCard(false)}
+                        className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition w-full"
+                      >
+                        Fechar
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <div className="text-center  flex justify-end items-center gap-4 p-4 z-40">
                   <input
@@ -446,6 +472,10 @@ function App() {
                     🔍 Filtrar
                   </button>
                 </div>
+                <h2 className="text-2xl font-extrabold text--600 mt-6">
+                  Pedidos
+                </h2>
+
                 {/* Cards dos produtos */}
                 <div className="">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -650,7 +680,7 @@ function App() {
               Comidas
             </h2>
             <ul className="list-none space-y-6 mb-8">
-              {produtos.comidas.map((comida) => (
+              {produtosState.comidas.map((comida) => (
                 <li
                   key={comida.id}
                   className="p-4 bg-gray-50 border border-gray-200 rounded-lg shadow-md flex justify-between items-center"
@@ -810,7 +840,7 @@ function App() {
               Bebidas
             </h2>
             <ul className="list-none space-y-6 mb-8">
-              {produtos.bebidas.map((comida) => (
+              {produtosState.bebidas.map((comida) => (
                 <li
                   key={comida.id}
                   className="p-4 bg-gray-50 border border-gray-200 rounded-lg shadow-md flex justify-between items-center"
