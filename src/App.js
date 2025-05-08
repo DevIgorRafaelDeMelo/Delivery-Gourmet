@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaPlus, FaMinus } from "react-icons/fa"; // Importar ícones do React Icons
 import logo from "./Abstract Chef Cooking Restaurant Free Logo.png";
 import produtos from "./Banco/Produto";
 
 function App() {
   const [produtosState, setProdutos] = useState(produtos);
-
   const [selectedProduct, setSelectedProduct] = useState(null); // Estado para guardar o produto selecionado
   const [showCard, setShowCard] = useState(false); // Estado para controlar a exibição do card
   const [showCardDrink, setShowCardDrink] = useState(false); // Estado para controlar a exibição do card
@@ -22,13 +21,12 @@ function App() {
   const [telefone, setTelefone] = useState("");
   const [complemento, setComplemento] = useState("");
   const [mostrarDiv, setMostrarDiv] = useState(false);
-  const numeroTelefone = "5551980253115"; //numero do forenecedor
-  const [termoFiltro, setTermoFiltro] = useState(""); // Estado para armazenar o ter
+  const numeroTelefone = "5551980253115"; //numero do forenecedor 
   const [editando, setEditando] = useState(false);
   const [produtoSelecionado, setProdutoSelecionado] = useState(null);
   const [seçãoAtiva, setSeçãoAtiva] = useState("produtos");
   const [visivel, setVisivel] = useState(true);
-
+  const [pedidosConfirmados, setPedidosConfirmados] = useState([]);
   const produtosFiltrados = {
     comidas: produtosState.comidas.filter((produto) =>
       produto.nome.toLowerCase().includes(pesquisa.toLowerCase())
@@ -52,8 +50,15 @@ function App() {
     { nome: "Queijo", valor: 2.5 },
     { nome: "Azeitonas", valor: 1.8 },
   ]);
-  const handleEnviarWhatsApp = () => {
-    // Substitua pelo número correto
+  const [novoProduto, setNovoProduto] = useState({
+    nome: "",
+    descricao: "",
+    preco: "",
+    imagem: "",
+  });
+  const handleEnviarWhatsApp = (e) => {
+    e.preventDefault(); // Impede que o formulário recarregue a página
+
     const valorTotal = carrinho
       .reduce((acc, item) => {
         const valorProdutos =
@@ -67,34 +72,56 @@ function App() {
       }, 0)
       .toFixed(2);
 
-    const mensagem = `
-  Informações da Compra:
-  - Nome: ${nome}
-  - Endereço: ${endereco}
-  - Telefone: ${telefone}
-  - Forma de Pagamento: ${formaPagamento}
-  - Complemento: ${complemento}
-  
-  Pedido:
-  ${carrinho
-    .map(
-      (item) =>
-        `- ${item.quantidade}x ${item.produto} ${
-          item.ingredientes.length > 0
-            ? `(Ingredientes: ${item.ingredientes
-                .map((i) => i.nome)
-                .join(", ")})`
-            : ""
-        } - R$${item.valorTotal}`
-    )
-    .join("\n")}
-  
-  Valor Total: R$${valorTotal}
-    `;
+    const novoPedido = {
+      nome,
+      endereco,
+      telefone,
+      formaPagamento,
+      complemento,
+      valorTotal,
+      itens: carrinho.map((item) => ({
+        nome: item.produto,
+        quantidade: item.quantidade,
+        preco: item.valorTotal,
+        ingredientes: item.ingredientes || [],
+      })),
+    };
 
-    const mensagemCodificada = encodeURIComponent(mensagem);
+    // Atualiza pedidos confirmados antes de abrir o WhatsApp
+    setPedidosConfirmados((prevPedidos) => [...prevPedidos, novoPedido]);
+
+    console.log("Pedido Confirmado:", novoPedido); // Verifica se o pedido foi adicionado
+
+    const mensagemCodificada = encodeURIComponent(`
+    Informações da Compra:
+    - Nome: ${nome}
+    - Endereço: ${endereco}
+    - Telefone: ${telefone}
+    - Forma de Pagamento: ${formaPagamento}
+    - Complemento: ${complemento}
+    
+    Pedido:
+    ${carrinho
+      .map(
+        (item) =>
+          `- ${item.quantidade}x ${item.produto} ${
+            item.ingredientes.length > 0
+              ? `(Ingredientes: ${item.ingredientes
+                  .map((i) => i.nome)
+                  .join(", ")})`
+              : ""
+          } - R$${item.valorTotal}`
+      )
+      .join("\n")}
+    
+    Valor Total: R$${valorTotal}
+    `);
+
     const linkWhatsApp = `https://wa.me/${numeroTelefone}?text=${mensagemCodificada}`;
-    window.open(linkWhatsApp, "_blank"); // Abre o WhatsApp com a mensagem
+
+    // Abre o WhatsApp com a mensagem
+    window.open(linkWhatsApp, "_blank");
+    setCarrinho([]);
   };
   const handleComprar = (produto) => {
     setSelectedProduct(produto); // Define o produto selecionado
@@ -179,9 +206,6 @@ function App() {
   const handleRemoverItem = (index) => {
     setCarrinho((prevCarrinho) => prevCarrinho.filter((_, i) => i !== index));
   };
-  const filtrarProdutos = () => {
-    setTermoFiltro(pesquisa);
-  };
   const abrirProduto = (produto) => {
     setProdutoSelecionado(produto);
   };
@@ -210,25 +234,47 @@ function App() {
       [campo]: valor,
     }));
   };
-  const [novoProduto, setNovoProduto] = useState({
-    nome: "",
-    descricao: "",
-    preco: "",
-    imagem: "",
-  });
-
   const adicionarProduto = () => {
     if (!novoProduto.nome || !novoProduto.preco) {
       alert("Preencha todos os campos!");
       return;
     }
 
-    setProdutos({
-      ...produtosState,
-      comidas: [...produtosState.comidas, { id: Date.now(), ...novoProduto }],
-    });
+    // Criando um novo objeto de produto com ID único
+    const novoItem = { id: Date.now(), ...novoProduto };
 
-    setNovoProduto({ nome: "", descricao: "", preco: "", imagem: "" }); // Resetando o formulário
+    // Atualizando produtosState corretamente
+    setProdutos((prevState) => ({
+      ...prevState,
+      comidas: [...prevState.comidas, novoItem], // Adiciona à lista de comidas
+    }));
+
+    // Resetando o formulário
+    setNovoProduto({ nome: "", descricao: "", preco: "", imagem: "" });
+  };
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setNovoProduto((prevState) => ({
+        ...prevState,
+        imagem: imageUrl,
+      }));
+    }
+  };
+  const formatarMoeda = (valor) => {
+    // Remove qualquer caractere que não seja número
+    const numeroLimpo = valor.replace(/\D/g, "");
+
+    // Converte para número e formata para moeda BRL
+    const numeroFormatado = new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 2,
+    }).format(numeroLimpo / 100); // Divide por 100 para incluir casas decimais corretamente
+
+    return numeroFormatado;
   };
 
   return (
@@ -236,406 +282,492 @@ function App() {
       {/* Seção ADM */}
       {mostrarDiv && (
         <>
-          <header className="sticky top-0 w-full  bg-teal-700 py-5 shadow-lg text-white flex flex-col items-center  z-1">
+          {/*Botão menu */}
+          <div className="fixed left-[17%] z-4  ">
+            <button
+              onClick={() => setVisivel(!visivel)}
+              className="px-4 py-2 pt-40 bg-teal-700 text-white hover:bg-teal-600 transition rounded-b-lg overflow-visible"
+            >
+              {visivel ? "Ocultar" : "Mostrar"}
+            </button>
+          </div>
+          {/*Header*/}
+          <header className="sticky top-0 w-full z-5 bg-teal-700 py-5 shadow-lg text-white flex flex-col items-center  z-1">
             <img
               src={logo}
               alt="Logo do Restaurante"
               className="w-20 h-20 rounded-full border-4 border-white shadow-md"
             />
             <h2 className="text-xl font-bold mt-2">Delivery Gourmet</h2>
+            {/* Ícone de configurações */}
             <button
               className="absolute top-4 right-4 bg-gray-700 text-white p-3 rounded-full shadow-lg"
               onClick={toggleDiv}
             >
-              ⚙️ {/* Ícone de configurações */}
+              ⚙️
             </button>
           </header>
+          {/* Paguina*/}
           <div className="fixed inset-0 bg-white  flex flex-col items-center justify-start overflow-y-auto max-h-screen">
-            <div className="relative">
-              {/* Botão para alternar a aba */}
-              <div>
-                {/* Aba lateral */}
+            {/* Aba lateral */}
+            <div
+              className={`fixed left-0   items-center justify-start overflow-y-auto  transition-transform duration-500 ease-in-out `}
+            >
+              <div className="flex  w-[25%]">
                 <div
-                  className={`fixed left-0   items-center justify-start overflow-y-auto  w-[30%]  transition-transform duration-500 ease-in-out `}
+                  className={`flex-1 bg-teal-700 max-h-screen h-screen  ${
+                    visivel ? "translate-x-0" : "-translate-x-full"
+                  }`}
                 >
-                  <div className="flex  w-[25%]">
-                    {/* Primeiro filho */}
-                    <div
-                      className={`flex-1 bg-teal-700 max-h-screen h-screen  ${
-                        visivel ? "translate-x-0" : "-translate-x-full"
-                      }`}
-                    >
-                      <div className="w-full flex flex-col items-center  bg-teal-700">
-                        <div
-                          onClick={() => setSeçãoAtiva("horarios")}
-                          className="w-80 py-6 text-center bg-teal-700 mt-45 text-white shadow-lg cursor-pointer text-xl hover:bg-teal-600 transition"
-                        >
-                          Horários
-                        </div>
-
-                        <div
-                          onClick={() => setSeçãoAtiva("produtos")}
-                          className="w-80 py-6 text-center bg-teal-700 text-white shadow-lg cursor-pointer text-xl hover:bg-teal-600 transition"
-                        >
-                          Produtos
-                        </div>
-
-                        <div
-                          onClick={() => setSeçãoAtiva("pedidos")}
-                          className="w-80 py-6 text-center bg-teal-700 text-white cursor-pointer text-xl hover:bg-teal-600 transition"
-                        >
-                          Pedidos
-                        </div>
-                        <div
-                           
-                          className="w-full py-6 text-center bg-teal-700 text-white fixed bottom-0"
-                        >
-                          V0.1 07.05.25 Devsystem 64 
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Segundo filho */}
-                    <div className="flex-1 w-[5%]">
-                      <button
-                        onClick={() => setVisivel(!visivel)}
-                        className="px-4 py-2 pt-12 bg-teal-700 text-white hover:bg-teal-600 transition rounded-b-lg overflow-visible"
+                  <div className="z-2">
+                    <div className="w-full flex flex-col items-center  bg-teal-700">
+                      <div
+                        onClick={() => setSeçãoAtiva("horarios")}
+                        className="w-80 py-6 text-center bg-teal-700 mt-45 text-white shadow-lg cursor-pointer text-xl hover:bg-teal-600 transition"
                       >
-                        {visivel ? "Ocultar" : "Mostrar"}
-                      </button>
+                        Horários
+                      </div>
+
+                      <div
+                        onClick={() => setSeçãoAtiva("produtos")}
+                        className="w-80 py-6 text-center bg-teal-700 text-white shadow-lg cursor-pointer text-xl hover:bg-teal-600 transition"
+                      >
+                        Produtos
+                      </div>
+
+                      <div
+                        onClick={() => setSeçãoAtiva("pedidos")}
+                        className="w-80 py-6 text-center bg-teal-700 text-white cursor-pointer text-xl hover:bg-teal-600 transition"
+                      >
+                        Pedidos
+                      </div>
+                      <div className="text-sm text-center bg-teal-700 text-white fixed bottom-0 py-6">
+                        V0.1 07.05.25 Devsystem 64
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-
-            {seçãoAtiva === "horarios" && (
-              <div className=" mt-[190px] w-[50%]">
-                <h2 className="text-lg font-bold mt-4">
-                  Gerenciamento de horarios
-                </h2>
-                {/* Horários de funcionamento com botão de edição e salvamento */}
-                <div className="mt-6 bg-gray-100  mt-16  p-6 rounded-lg shadow-md  text-center">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold">
-                      Horários de Funcionamento
-                    </h3>
-                  </div>
-
-                  <ul className="text-sm text-gray-700 mt-2 space-y-2">
-                    {Object.entries(horarios).map(([dia, horario]) => (
-                      <li
-                        key={dia}
-                        className="flex justify-between  p-2 rounded-md shadow"
-                      >
-                        <span className="font-medium">
-                          {dia.charAt(0).toUpperCase() + dia.slice(1)}:
-                        </span>
-                        {editando ? (
-                          <input
-                            type="text"
-                            value={horario}
-                            placeholder="HH:MM - HH:MM"
-                            className="flex justify-between bg-white p-2 rounded-md shadow"
-                            onChange={(e) =>
-                              alterarHorario(dia, e.target.value)
-                            }
-                            pattern="([01]\d|2[0-3]):[0-5]\d - ([01]\d|2[0-3]):[0-5]\d"
-                            title="Formato esperado: HH:MM - HH:MM"
-                          />
-                        ) : (
-                          <span>{horario}</span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-
-                  {!editando && (
-                    <button
-                      className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition"
-                      onClick={() => setEditando(!editando)}
-                    >
-                      Editar
-                    </button>
-                  )}
-
-                  {editando && (
-                    <button
-                      className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition"
-                      onClick={() => {
-                        setEditando(false);
-                      }}
-                    >
-                      Salvar
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-            {seçãoAtiva === "produtos" && (
-              <div className=" mt-[10%] ">
-                <button
-                  onClick={() => setMostrarFormularioCard(true)}
-                  className="fixed bottom-4 right-4 px-6 py-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-all duration-300"
-                >
-                   Adicionar Produto
-                </button>
-                {mostrarFormularioCard && (
-                  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-4 rounded-lg shadow-xl w-64">
-                      <h3 className="text-lg font-semibold mt-2">
-                        Adicionar Produto
+            {/* Seções */}
+            <>
+              {seçãoAtiva === "horarios" && (
+                <div className=" mt-[190px] w-[50%]">
+                  <h2 className="text-lg font-bold text-teal-500 mt-4">
+                    Gerenciamento de horarios
+                  </h2>
+                  {/* Horários de funcionamento com botão de edição e salvamento */}
+                  <div className="mt-6 bg-gray-100  mt-16  p-6 rounded-lg shadow-md  text-center">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold">
+                        Horários de Funcionamento
                       </h3>
+                    </div>
 
-                      <input
-                        type="text"
-                        placeholder="Nome do produto"
-                        value={novoProduto.nome}
-                        onChange={(e) =>
-                          setNovoProduto({
-                            ...novoProduto,
-                            nome: e.target.value,
-                          })
-                        }
-                        className="mt-2 p-2 border border-gray-300 rounded-md w-full"
-                      />
+                    <ul className="text-sm text-gray-700 mt-2 space-y-2">
+                      {Object.entries(horarios).map(([dia, horario]) => (
+                        <li
+                          key={dia}
+                          className="flex justify-between  p-2 rounded-md shadow"
+                        >
+                          <span className="font-medium">
+                            {dia.charAt(0).toUpperCase() + dia.slice(1)}:
+                          </span>
+                          {editando ? (
+                            <input
+                              type="text"
+                              value={horario}
+                              placeholder="HH:MM - HH:MM"
+                              className="flex justify-between bg-white p-2 rounded-md shadow"
+                              onChange={(e) =>
+                                alterarHorario(dia, e.target.value)
+                              }
+                              pattern="([01]\d|2[0-3]):[0-5]\d - ([01]\d|2[0-3]):[0-5]\d"
+                              title="Formato esperado: HH:MM - HH:MM"
+                            />
+                          ) : (
+                            <span>{horario}</span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
 
-                      <input
-                        type="text"
-                        placeholder="Descrição"
-                        value={novoProduto.descricao}
-                        onChange={(e) =>
-                          setNovoProduto({
-                            ...novoProduto,
-                            descricao: e.target.value,
-                          })
-                        }
-                        className="mt-2 p-2 border border-gray-300 rounded-md w-full"
-                      />
-
-                      <input
-                        type="text"
-                        placeholder="Preço"
-                        value={novoProduto.preco}
-                        onChange={(e) =>
-                          setNovoProduto({
-                            ...novoProduto,
-                            preco: e.target.value,
-                          })
-                        }
-                        className="mt-2 p-2 border border-gray-300 rounded-md w-full"
-                      />
-
-                      <input
-                        type="text"
-                        placeholder="URL da Imagem"
-                        value={novoProduto.imagem}
-                        onChange={(e) =>
-                          setNovoProduto({
-                            ...novoProduto,
-                            imagem: e.target.value,
-                          })
-                        }
-                        className="mt-2 p-2 border border-gray-300 rounded-md w-full"
-                      />
-
+                    {!editando && (
                       <button
-                        onClick={adicionarProduto}
-                        className="mt-2 px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition"
+                        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition"
+                        onClick={() => setEditando(!editando)}
                       >
-                        Adicionar Produto
+                        Editar
                       </button>
+                    )}
 
+                    {editando && (
                       <button
-                        onClick={() => setMostrarFormularioCard(false)}
-                        className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition w-full"
+                        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition"
+                        onClick={() => {
+                          setEditando(false);
+                        }}
                       >
-                        Fechar
+                        Salvar
                       </button>
+                    )}
+                  </div>
+                </div>
+              )}
+              {seçãoAtiva === "produtos" && (
+                <div className=" mt-[10%] ">
+                  <button
+                    onClick={() => setMostrarFormularioCard(true)}
+                    className="fixed bottom-4 right-4 px-6 py-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-all duration-300"
+                  >
+                    Adicionar Produto
+                  </button>
+                  {mostrarFormularioCard && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                      <div className="bg-white p-6 rounded-lg shadow-xl w-96 relative">
+                        {/* Botão de fechar no canto superior direito */}
+                        <button
+                          onClick={() => setMostrarFormularioCard(false)}
+                          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-lg"
+                        >
+                          ✖
+                        </button>
+
+                        <h3 className="text-2xl font-bold mt-4">
+                          Adicionar Produto
+                        </h3>
+
+                        <input
+                          type="text"
+                          placeholder="Nome do produto"
+                          value={novoProduto.nome}
+                          onChange={(e) =>
+                            setNovoProduto({
+                              ...novoProduto,
+                              nome: e.target.value,
+                            })
+                          }
+                          className="mt-4 p-3 text-lg border border-gray-400 rounded-lg w-full"
+                        />
+
+                        <input
+                          type="text"
+                          placeholder="Descrição"
+                          value={novoProduto.descricao}
+                          onChange={(e) =>
+                            setNovoProduto({
+                              ...novoProduto,
+                              descricao: e.target.value,
+                            })
+                          }
+                          className="mt-4 p-3 text-lg border border-gray-400 rounded-lg w-full"
+                        />
+
+                        <input
+                          type="text"
+                          placeholder="Preço"
+                          value={novoProduto.preco}
+                          onChange={(e) => {
+                            const valorFormatado = formatarMoeda(
+                              e.target.value
+                            );
+                            setNovoProduto({
+                              ...novoProduto,
+                              preco: valorFormatado,
+                            });
+                          }}
+                          className="mt-4 p-3 text-lg border border-gray-400 rounded-lg w-full"
+                        />
+
+                        <div className="flex flex-col items-center gap-2 border rounded-lg  mt-3 shadow-sm  bg-blue-500 ">
+                          <label
+                            htmlFor="file-upload"
+                            className="cursor-pointer p-4  w-full py-2 text-white rounded-lg hover:bg-blue-600 transition duration-200"
+                          >
+                            Selecionar Imagem
+                          </label>
+                          <input
+                            id="file-upload"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                          />
+                        </div>
+
+                        <button
+                          onClick={adicionarProduto}
+                          className="mt-4 px-6 py-3 bg-teal-600 text-white text-lg rounded-lg hover:bg-teal-700 transition"
+                        >
+                          Adicionar Produto
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  <div className="text-center  flex justify-end gap-4 p-4 z-40">
+                    <div className="flex items-center border rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-blue-500 transition duration-200 px-3 py-1">
+                      <svg
+                        className="w-5 h-5 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M21 21l-4.35-4.35m-2.3-2.3a7.5 7.5 0 1 0-10.6-10.6 7.5 7.5 0 0 0 10.6 10.6z"
+                        ></path>
+                      </svg>
+                      <input
+                        type="text"
+                        placeholder="Pesquisar produto..."
+                        value={pesquisa}
+                        onChange={(e) => setPesquisa(e.target.value)}
+                        className="ml-2 flex-grow focus:outline-none"
+                      />
                     </div>
                   </div>
-                )}
-
-                <div className="text-center  flex justify-end items-center gap-4 p-4 z-40">
-                  <input
-                    type="text"
-                    placeholder="Pesquisar produto..."
-                    value={pesquisa}
-                    onChange={(e) => setPesquisa(e.target.value)}
-                    className="p-3 border  rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-200"
-                  />
-
-                  <button
-                    onClick={filtrarProdutos}
-                    className="px-6 py-3 bg-teal-600 from-blue-500 to-indigo-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300"
-                  >
-                    🔍 Filtrar
-                  </button>
-                </div>
-                <h2 className="text-2xl font-extrabold text--600 mt-6">
-                  Pedidos
-                </h2>
-
-                {/* Cards dos produtos */}
-                <div className="">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {produtosFiltrados.comidas.map((produto) => (
-                      <div
-                        key={produto.id}
-                        className="bg-white p-4 rounded-lg shadow-xl w-64 text-center"
-                      >
-                        <img
-                          src={produto.imagem}
-                          alt={produto.nome}
-                          className="w-full h-40 object-cover rounded-md"
-                        />
-                        <h3 className="text-lg font-semibold mt-2">
-                          {produto.nome}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {produto.descricao}
-                        </p>
-                        <p className="text-lg font-bold mt-2">
-                          {produto.preco}
-                        </p>
-
-                        <button
-                          onClick={() => abrirProduto(produto)}
-                          className="mt-2 px-4 py-2 bg-blue-300 text-white rounded-md hover:bg-blue-600 transition"
+                  <h2 className="text-2xl font-extrabold text-teal-500  mt-6">
+                    Produtos
+                  </h2>
+                  {/* Cards dos produtos */}
+                  <div className="">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {produtosFiltrados.comidas.map((produto) => (
+                        <div
+                          key={produto.id}
+                          className="bg-white p-4 rounded-lg shadow-xl w-64 text-center"
                         >
-                          Editar produto
-                        </button>
-                      </div>
-                    ))}
+                          <img
+                            src={produto.imagem}
+                            alt={produto.nome}
+                            className="w-full h-40 object-cover rounded"
+                          />
+                          <h3 className="text-lg font-semibold mt-2">
+                            {produto.nome}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            {produto.descricao}
+                          </p>
+                          <p className="text-lg font-bold mt-2">
+                            {produto.preco}
+                          </p>
 
-                    {produtosFiltrados.bebidas.map((produto) => (
-                      <div
-                        key={produto.id}
-                        className="bg-white p-4 rounded-lg shadow-xl w-64 text-center"
-                      >
-                        <img
-                          src={produto.imagem}
-                          alt={produto.nome}
-                          className="w-full h-40 object-cover rounded-md"
-                        />
-                        <h3 className="text-lg font-semibold mt-2">
-                          {produto.nome}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {produto.descricao}
-                        </p>
-                        <p className="text-lg font-bold mt-2">
-                          {produto.preco}
-                        </p>
+                          <button
+                            onClick={() => abrirProduto(produto)}
+                            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+                          >
+                            Editar produto
+                          </button>
+                        </div>
+                      ))}
 
-                        <button
-                          onClick={() => abrirProduto(produto)}
-                          className="mt-2 px-4 py-2 bg-blue-300 text-white rounded-md hover:bg-blue-600 transition"
+                      {produtosFiltrados.bebidas.map((produto) => (
+                        <div
+                          key={produto.id}
+                          className="bg-white p-4 rounded-lg shadow-xl w-64 text-center"
                         >
-                          Editar produto
-                        </button>
+                          <img
+                            src={produto.imagem}
+                            alt={produto.nome}
+                            className="w-full h-40 object-cover rounded-md"
+                          />
+                          <h3 className="text-lg font-semibold mt-2">
+                            {produto.nome}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            {produto.descricao}
+                          </p>
+                          <p className="text-lg font-bold mt-2">
+                            {produto.preco}
+                          </p>
+
+                          <button
+                            onClick={() => abrirProduto(produto)}
+                            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+                          >
+                            Editar produto
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {produtoSelecionado && (
+                      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                        <div className="bg-white p-6 rounded-md shadow-lg w-80 text-center">
+                          <h2 className="text-lg font-semibold mb-4">
+                            {produtoSelecionado.nome}
+                          </h2>
+                          <img
+                            src={produtoSelecionado.imagem}
+                            alt={produtoSelecionado.nome}
+                            className="w-full h-40 object-cover rounded-md mb-2"
+                          />
+                          <p className="text-sm text-gray-600">
+                            {produtoSelecionado.descricao}
+                          </p>
+                          <p className="text-lg font-bold mt-2">
+                            {produtoSelecionado.preco}
+                          </p>
+
+                          <button
+                            onClick={fecharProduto}
+                            className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition w-full"
+                          >
+                            Fechar
+                          </button>
+                        </div>
                       </div>
-                    ))}
+                    )}
                   </div>
-
+                  {/* modal dos produtos */}
                   {produtoSelecionado && (
                     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
                       <div className="bg-white p-6 rounded-md shadow-lg w-80 text-center">
-                        <h2 className="text-lg font-semibold mb-4">
-                          {produtoSelecionado.nome}
-                        </h2>
+                        <input
+                          type="text"
+                          value={produtoSelecionado.nome}
+                          onChange={(e) =>
+                            atualizarProduto(
+                              produtoSelecionado.id,
+                              "comidas",
+                              "nome",
+                              e.target.value
+                            )
+                          }
+                          className="text-lg font-semibold mb-4 text-center border border-gray-300 rounded-md px-2"
+                        />
+
+                        <input
+                          type="text"
+                          value={produtoSelecionado.preco}
+                          onChange={(e) =>
+                            atualizarProduto(
+                              produtoSelecionado.id,
+                              "comidas",
+                              "preco",
+                              e.target.value
+                            )
+                          }
+                          className="text-lg font-bold mt-2 text-center border border-gray-300 rounded-md px-2"
+                        />
+
+                        <input
+                          type="text"
+                          value={produtoSelecionado.imagem}
+                          onChange={(e) =>
+                            atualizarProduto(
+                              produtoSelecionado.id,
+                              "comidas",
+                              "imagem",
+                              e.target.value
+                            )
+                          }
+                          className="text-sm text-gray-600 mt-2 border border-gray-300 rounded-md px-2"
+                          placeholder="URL da imagem"
+                        />
+
                         <img
                           src={produtoSelecionado.imagem}
                           alt={produtoSelecionado.nome}
                           className="w-full h-40 object-cover rounded-md mb-2"
                         />
-                        <p className="text-sm text-gray-600">
-                          {produtoSelecionado.descricao}
-                        </p>
-                        <p className="text-lg font-bold mt-2">
-                          {produtoSelecionado.preco}
-                        </p>
 
                         <button
                           onClick={fecharProduto}
                           className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition w-full"
                         >
-                          Fechar
+                          salvar
                         </button>
                       </div>
                     </div>
                   )}
                 </div>
-                {/* modal dos produtos */}
-                {produtoSelecionado && (
-                  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-6 rounded-md shadow-lg w-80 text-center">
-                      <input
-                        type="text"
-                        value={produtoSelecionado.nome}
-                        onChange={(e) =>
-                          atualizarProduto(
-                            produtoSelecionado.id,
-                            "comidas",
-                            "nome",
-                            e.target.value
-                          )
-                        }
-                        className="text-lg font-semibold mb-4 text-center border border-gray-300 rounded-md px-2"
-                      />
+              )}
+              {seçãoAtiva === "pedidos" && (
+                <div className="mt-[180px] w-[75%]  fixed right-[5%] top-0 h-screen overflow-auto">
+                  
+                  {/* Código de gerenciamento de usuários */}
+                  <section className="p-6 bg-gray-100 rounded-lg shadow-lg w-full mb-[20%]">
+                    <h2 className="text-2xl font-semibold text-teal-700 mb-4">
+                      Pedidos Confirmados
+                    </h2>
 
-                      <input
-                        type="text"
-                        value={produtoSelecionado.preco}
-                        onChange={(e) =>
-                          atualizarProduto(
-                            produtoSelecionado.id,
-                            "comidas",
-                            "preco",
-                            e.target.value
-                          )
-                        }
-                        className="text-lg font-bold mt-2 text-center border border-gray-300 rounded-md px-2"
-                      />
+                    {pedidosConfirmados.length === 0 ? (
+                      <p className="text-gray-600">
+                        Nenhum pedido confirmado ainda.
+                      </p>
+                    ) : (
+                      <ul className="space-y-4 ">
+                        {pedidosConfirmados.map((pedido, index) => (
+                          <li
+                            key={index}
+                            className="bg-white p-4 rounded-lg shadow-md flex flex-col gap-3 w-full"
+                          >
+                            <div className="flex justify-between items-center border-b pb-2">
+                              <h3 className="font-bold text-lg">
+                                Pedido {index + 1}
+                              </h3>
+                              <p className="text-gray-900 text">
+                                Total: {pedido.valorTotal}
+                              </p>
+                            </div>
 
-                      <input
-                        type="text"
-                        value={produtoSelecionado.imagem}
-                        onChange={(e) =>
-                          atualizarProduto(
-                            produtoSelecionado.id,
-                            "comidas",
-                            "imagem",
-                            e.target.value
-                          )
-                        }
-                        className="text-sm text-gray-600 mt-2 border border-gray-300 rounded-md px-2"
-                        placeholder="URL da imagem"
-                      />
+                            <div className="flex flex-col gap-1">
+                              <p>
+                                <strong>Nome:</strong> {pedido.nome}
+                              </p>
+                              <p>
+                                <strong>Endereço:</strong> {pedido.endereco}
+                              </p>
+                              <p>
+                                <strong>Telefone:</strong> {pedido.telefone}
+                              </p>
+                              <p>
+                                <strong>Forma de Pagamento:</strong>{" "}
+                                {pedido.formaPagamento}
+                              </p>
+                              <p>
+                                <strong>Complemento:</strong>{" "}
+                                {pedido.complemento}
+                              </p>
+                            </div>
 
-                      <img
-                        src={produtoSelecionado.imagem}
-                        alt={produtoSelecionado.nome}
-                        className="w-full h-40 object-cover rounded-md mb-2"
-                      />
-
-                      <button
-                        onClick={fecharProduto}
-                        className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition w-full"
-                      >
-                        salvar
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            {seçãoAtiva === "pedidos" && (
-              <div>
-                <h2 className="text-lg font-bold mt-4">Usuários</h2>
-                {/* Código de gerenciamento de usuários */}
-              </div>
-            )}
+                            <h4 className="font-semibold mt-2 border-t pt-2">
+                              Itens do Pedido:
+                            </h4>
+                            <ul className="flex flex-col gap-1">
+                              {pedido.itens.map((item, i) => (
+                                <li
+                                  key={i}
+                                  className="flex justify-between items-center bg-gray-100 p-2 rounded"
+                                >
+                                  <span>
+                                    {item.quantidade}x {item.nome} ({item.preco}
+                                    )
+                                  </span>
+                                  {item.ingredientes.length > 0 && (
+                                    <span className="text-xs text-gray-600">
+                                      -{" "}
+                                      {item.ingredientes
+                                        .map((ing) => ing.nome)
+                                        .join(", ")}
+                                    </span>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </section>
+                </div>
+              )}
+            </>
+            {/* Versão sistema */}
             <div className="mb-40"></div>
           </div>
         </>
@@ -673,7 +805,6 @@ function App() {
               ))}
             </ul>
           </div>
-
           {/* Seção Comidas */}
           <section className="w-3/5 mx-auto">
             <h2 className="text-3xl font-semibold text-teal-700 mb-4 mt-6">
@@ -1096,7 +1227,7 @@ function App() {
                     {/* Botão para finalizar compra */}
                     <button
                       className="w-full px-6 py-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition duration-300 font-semibold mt-4"
-                      onClick={() => setMostrarFormulario(true)} // Abre o formulário
+                      onClick={() => setMostrarFormulario(true) } // Abre o formulário
                     >
                       Finalizar Compra
                     </button>
