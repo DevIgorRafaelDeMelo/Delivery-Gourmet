@@ -1,13 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaPlus,
   FaMinus,
   FaMapMarkerAlt,
   FaClock,
   FaPhone,
-} from "react-icons/fa"; // Importar ícones do React Icons
+} from "react-icons/fa";
 import logo from "./Abstract Chef Cooking Restaurant Free Logo.png";
 import produtos from "./Banco/Produto";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
+import { DB } from "./firebaseConfig";
 
 function App() {
   const [produtosState, setProdutos] = useState(produtos);
@@ -35,6 +43,16 @@ function App() {
   const [paginaSelecionada, setPaginaSelecionada] = useState("pedidos");
   const [visivel, setVisivel] = useState(true);
   const [pedidosConfirmados, setPedidosConfirmados] = useState([]);
+  const [empresaEditada, setEmpresaEditada] = useState("empressa");
+  const [pedidoAberto, setPedidoAberto] = useState(null);
+  const [empresa, setEmpresa] = useState({
+    nome: "Minha Empresa Ltda",
+    cnpj: "00.000.000/0001-00",
+    endereco: "Rua Exemplo, 123 - Cidade, Estado",
+    telefone: "(00) 0000-0000",
+    email: "contato@empresa.com",
+    logo: logo, // Imagem temporária
+  });
   const produtosFiltrados = {
     comidas: produtosState.comidas.filter((produto) =>
       produto.nome.toLowerCase().includes(pesquisa.toLowerCase())
@@ -64,9 +82,8 @@ function App() {
     preco: "",
     imagem: "",
   });
-  const [pedidoAberto, setPedidoAberto] = useState(null);
   const handleEnviarWhatsApp = (e) => {
-    e.preventDefault(); // Impede que o formulário recarregue a página
+    e.preventDefault();
 
     const valorTotal = carrinho
       .reduce((acc, item) => {
@@ -94,12 +111,14 @@ function App() {
         preco: item.valorTotal,
         ingredientes: item.ingredientes || [],
       })),
+      status: "Não Atendido", // Valor inicial
     };
 
-    // Atualiza pedidos confirmados antes de abrir o WhatsApp
-    setPedidosConfirmados((prevPedidos) => [...prevPedidos, novoPedido]);
+    // Adiciona ao Firebase
+    addPedidoAoFirebase(novoPedido);
 
-    console.log("Pedido Confirmado:", novoPedido); // Verifica se o pedido foi adicionado
+    setPedidosConfirmados((prevPedidos) => [...prevPedidos, novoPedido]);
+    console.log("Pedido Confirmado:", novoPedido);
 
     const mensagemCodificada = encodeURIComponent(`
     Informações da Compra:
@@ -127,8 +146,6 @@ function App() {
     `);
 
     const linkWhatsApp = `https://wa.me/${numeroTelefone}?text=${mensagemCodificada}`;
-
-    // Abre o WhatsApp com a mensagem
     window.open(linkWhatsApp, "_blank");
     setCarrinho([]);
   };
@@ -136,6 +153,14 @@ function App() {
     setSelectedProduct(produto); // Define o produto selecionado
     setShowCard(true);
     // Exibe o card
+  };
+  const addPedidoAoFirebase = async (pedido) => {
+    try {
+      await addDoc(collection(DB, "pedidos"), pedido);
+      console.log("Pedido salvo no Firebase:", pedido);
+    } catch (error) {
+      console.error("Erro ao salvar pedido:", error.message);
+    }
   };
   const handleCloseCard = () => {
     setShowCard(false); // Fecha o card
@@ -300,17 +325,6 @@ function App() {
     setPaginaSelecionada(pagina);
     setPaginaAtual(pagina);
   };
-  const [empresa, setEmpresa] = useState({
-    nome: "Minha Empresa Ltda",
-    cnpj: "00.000.000/0001-00",
-    endereco: "Rua Exemplo, 123 - Cidade, Estado",
-    telefone: "(00) 0000-0000",
-    email: "contato@empresa.com",
-    logo: logo, // Imagem temporária
-  });
-
-  const [empresaEditada, setEmpresaEditada] = useState(empresa);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setEmpresaEditada((prevEmpresa) => ({
@@ -318,7 +332,6 @@ function App() {
       [name]: value,
     }));
   };
-
   const handleLogoUpload = (event) => {
     const file = event.target.files[0];
 
@@ -333,31 +346,64 @@ function App() {
       reader.readAsDataURL(file);
     }
   };
-
   const salvarEdicao = () => {
     setEmpresa(empresaEditada);
     setEditando(false);
   };
+  const fetchPedidos = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(DB, "pedidos"));
+      const pedidos = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setPedidosConfirmados(pedidos);
+    } catch (error) {
+      console.error("Erro ao buscar pedidos:", error);
+    }
+  };
+
+  const atualizarStatusPedido = async (pedidoId, novoStatus) => {
+    try {
+      const pedidoRef = doc(DB, "pedidos", pedidoId);
+      await updateDoc(pedidoRef, { status: novoStatus });
+      console.log(`Pedido ${pedidoId} atualizado para: ${novoStatus}`);
+
+      // Atualiza localmente os pedidos
+      setPedidosConfirmados((prevPedidos) =>
+        prevPedidos.map((pedido) =>
+          pedido.id === pedidoId ? { ...pedido, status: novoStatus } : pedido
+        )
+      );
+    } catch (error) {
+      console.error("Erro ao atualizar status do pedido:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPedidos();
+  }, []);
 
   return (
-    <div className=" bg-neutral-100 pb-20 min-h-screen text-center   rounded-lg">
+    <div className=" bg-neutral-100 pb-20 min-h-screen text-center rounded-lg">
       {/*Header*/}
-      <header className="bg-teal-700 h-50 p-5 w-full shadow-lg text-white flex flex-col items-center fixed top-0 left-0 right-0 ">
-        <img
-          src={empresa.logo}
-          alt="Logo do Restaurante"
-          className="w-30 h-30 rounded-full border-4 border-white shadow-md"
-        />
-        <h2 className="text-xl font-bold mt-2">Delivery Gourmet</h2>
-        {/* Ícone de configurações */}
-        <button
-          className="absolute top-4 right-4 bg-gray-700 text-white p-3 rounded-full shadow-lg"
-          onClick={toggleDiv}
-        >
-          ⚙️
-        </button>
+      <header className="h-50">
+        <header className="bg-teal-700 h-50 p-5 w-full shadow-lg text-white flex flex-col items-center fixed top-0 left-0 right-0 ">
+          <img
+            src={empresa.logo}
+            alt="Logo do Restaurante"
+            className="w-30 h-30 rounded-full border-4 border-white shadow-md"
+          />
+          <h2 className="text-xl font-bold mt-2">Delivery Gourmet</h2>
+          {/* Ícone de configurações */}
+          <button
+            className="absolute top-4 right-4 bg-gray-700 text-white p-3 rounded-full shadow-lg"
+            onClick={toggleDiv}
+          >
+            ⚙️
+          </button>
+        </header>
       </header>
-      <div className="h-50"></div>
       {/* Seção ADM */}
       {mostrarDiv && (
         <>
@@ -412,7 +458,7 @@ function App() {
             </div>
           </div>
           {/* Seções */}
-          < div className="  bg-neutral-100 px-[20%] text-center">
+          <div className="  bg-neutral-100 px-[20%] text-center">
             {seçãoAtiva === "horarios" && (
               <div className=" mt-10 w-[50%] m-auto">
                 <h2 className="text-lg font-bold text-teal-500 mt-4">
@@ -739,7 +785,10 @@ function App() {
               </div>
             )}
             {seçãoAtiva === "pedidos" && (
-              <div className="mt-10 w-[75%] h-screen overflow-auto">
+              <div className="mt-10 w-full h-screen overflow-auto">
+                <h2 className="text-lg font-bold text-teal-900 mt-4">
+                  Gerenciamento de Pedidos
+                </h2>
                 {/* Código de gerenciamento de usuários */}
                 <section className="p-6 bg-gray-100 rounded-lg shadow-lg  w-full mb-[20%]">
                   <h2 className="text-2xl font-semibold text-teal-700 mb-4">
@@ -771,6 +820,46 @@ function App() {
                             <p className="text-gray-900 text">
                               Total: {pedido.valorTotal}
                             </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              className={`px-2 py-1 rounded-md text-sm font-semibold text-white ${
+                                pedido.status === "Não Atendido"
+                                  ? "bg-gray-600"
+                                  : "bg-gray-300"
+                              }`}
+                              onClick={() =>
+                                atualizarStatusPedido(pedido.id, "Não Atendido")
+                              }
+                            >
+                              Não Atendido
+                            </button>
+
+                            <button
+                              className={`px-2 py-1 rounded-md text-sm font-semibold text-white ${
+                                pedido.status === "Atendido"
+                                  ? "bg-green-600"
+                                  : "bg-green-300"
+                              }`}
+                              onClick={() =>
+                                atualizarStatusPedido(pedido.id, "Atendido")
+                              }
+                            >
+                              Atendido
+                            </button>
+
+                            <button
+                              className={`px-2 py-1 rounded-md text-sm font-semibold text-white ${
+                                pedido.status === "Cancelado"
+                                  ? "bg-red-600"
+                                  : "bg-red-300"
+                              }`}
+                              onClick={() =>
+                                atualizarStatusPedido(pedido.id, "Cancelado")
+                              }
+                            >
+                              Cancelado
+                            </button>
                           </div>
 
                           {pedidoAberto === index && (
@@ -942,7 +1031,7 @@ function App() {
       {/* Seção Cliente */}
       {!mostrarDiv && (
         <>
-          <nav className="bg-teal-700 fixed top-50 left-[25%] text-white p-4 rounded-b-lg mt-1 px-[10%] shadow-md w-[50%] m-auto z-50">
+          <nav className="bg-teal-700 fixed top-50 left-[25%] text-white p-4 rounded-b-lg mt-1 px-[10%] shadow-md w-[50%] m-auto ">
             <ul className="flex justify-between items-center gap-4">
               <li>
                 <button
