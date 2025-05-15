@@ -594,117 +594,115 @@ function Admin() {
                   </p>
                 ) : (
                   <ul className="space-y-4">
-                    {pedidosConfirmados.map((pedido, index) => (
-                      <li
-                        key={index}
-                        className="bg-white w-full p-4 rounded-lg shadow-md flex flex-col gap-3 w-full"
-                      >
-                        <div
-                          className="flex justify-between items-center border-b pb-2 cursor-pointer"
-                          onClick={() => togglePedido(index)}
+                    {pedidosConfirmados
+                      .slice() // Evita modificar o array original
+                      .sort(
+                        (a, b) =>
+                          new Date(b.horario).getTime() -
+                          new Date(a.horario).getTime()
+                      ) // Ordena pelo horário do pedido
+                      .map((pedido, index) => (
+                        <li
+                          key={index}
+                          className="bg-white w-full p-4 rounded-lg shadow-md flex flex-col gap-3"
                         >
-                          <h3 className="font-bold text-lg">
-                            Pedido {index + 1}
-                          </h3>
+                          <div
+                            className="flex justify-between items-center border-b pb-2 cursor-pointer"
+                            onClick={() => togglePedido(index)}
+                          >
+                            <h3 className="font-bold text-lg">
+                              Pedido {index + 1}
+                            </h3>
+                            <p>
+                              <strong>Cliente:</strong> {pedido.nome}
+                            </p>
+                            <p className="text-gray-900 text">
+                              <strong>Total:</strong> {pedido.valorTotal}
+                            </p>
+                          </div>
+
                           <p>
-                            <strong>Cliente:</strong> {pedido.nome}
+                            <strong>Data do Pedido:</strong>{" "}
+                            {new Date(pedido.horario).toLocaleDateString()}
+                          </p>
+                          <p>
+                            <strong>Horário:</strong>{" "}
+                            {new Date(pedido.horario).toLocaleTimeString()}
                           </p>
 
-                          <p className="text-gray-900 text">
-                            Total: {pedido.valorTotal}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            className={`px-4 py-2 rounded-md font-semibold text-white ${
-                              pedido.status === "Não Atendido"
-                                ? "bg-gray-600"
-                                : "bg-gray-300"
-                            }`}
-                            onClick={() =>
-                              atualizarStatusPedido(pedido.id, "Não Atendido")
-                            }
-                          >
-                            Não Atendido
-                          </button>
+                          {/* Botões de status */}
+                          <div className="flex gap-2">
+                            <button
+                              className={`px-4 py-2 rounded-md font-semibold text-white ${
+                                pedido.status === "Não Atendido"
+                                  ? "bg-gray-600"
+                                  : "bg-gray-300"
+                              }`}
+                              onClick={() =>
+                                atualizarStatusPedido(pedido.id, "Não Atendido")
+                              }
+                            >
+                              Não Atendido
+                            </button>
 
-                          <button
-                            className={`px-4 py-2 rounded-md font-semibold text-white ${
-                              pedido.status === "Atendido"
-                                ? "bg-green-600"
-                                : "bg-green-300"
-                            }`}
-                            onClick={() =>
-                              atualizarStatusPedido(pedido.id, "Atendido")
-                            }
-                          >
-                            Atendido
-                          </button>
+                            <button
+                              className={`px-4 py-2 rounded-md font-semibold text-white ${
+                                pedido.status === "Atendido"
+                                  ? "bg-green-600"
+                                  : "bg-green-300"
+                              }`}
+                              onClick={() =>
+                                atualizarStatusPedido(pedido.id, "Atendido")
+                              }
+                            >
+                              Atendido
+                            </button>
 
-                          <button
-                            className={`px-4 py-2 rounded-md font-semibold text-white ${
-                              pedido.status === "Cancelado"
-                                ? "bg-red-600"
-                                : "bg-red-300"
-                            }`}
-                            onClick={() =>
-                              atualizarStatusPedido(pedido.id, "Cancelado")
-                            }
-                          >
-                            Cancelado
-                          </button>
-                        </div>
+                            <button
+                              className={`px-4 py-2 rounded-md font-semibold text-white ${
+                                pedido.status === "Cancelado"
+                                  ? "bg-red-600"
+                                  : "bg-red-300"
+                              }`}
+                              onClick={() =>
+                                atualizarStatusPedido(pedido.id, "Cancelado")
+                              }
+                            >
+                              Cancelado
+                            </button>
+                          </div>
 
-                        {pedidoAberto === index && (
-                          <>
-                            <div className="flex flex-col gap-1">
-                              <p>
-                                <strong>Nome:</strong> {pedido.nome}
-                              </p>
-                              <p>
-                                <strong>Endereço:</strong> {pedido.endereco}
-                              </p>
-                              <p>
-                                <strong>Telefone:</strong> {pedido.telefone}
-                              </p>
-                              <p>
-                                <strong>Forma de Pagamento:</strong>{" "}
-                                {pedido.formaPagamento}
-                              </p>
-                              <p>
-                                <strong>Complemento:</strong>{" "}
-                                {pedido.complemento}
-                              </p>
-                            </div>
-
-                            <h4 className="font-semibold mt-2 border-t pt-2">
-                              Itens do Pedido:
-                            </h4>
-                            <ul className="flex flex-col gap-1">
-                              {pedido.itens.map((item, i) => (
-                                <li
-                                  key={i}
-                                  className="flex justify-between items-center bg-gray-100 p-2 rounded"
-                                >
-                                  <span>
-                                    {item.quantidade}x {item.nome} ({item.preco}
-                                    )
-                                  </span>
-                                  {item.ingredientes.length > 0 && (
-                                    <span className="text-xs text-gray-600">
-                                      -{" "}
-                                      {item.ingredientes
-                                        .map((ing) => ing.nome)
-                                        .join(", ")}
+                          {/* Exibir detalhes do pedido quando aberto */}
+                          {pedidoAberto === index && (
+                            <>
+                              <h4 className="font-semibold mt-2 border-t pt-2">
+                                Itens do Pedido:
+                              </h4>
+                              <ul className="flex flex-col gap-1">
+                                {pedido.itens.map((item, i) => (
+                                  <li
+                                    key={i}
+                                    className="flex justify-between items-center bg-gray-100 p-2 rounded"
+                                  >
+                                    <span>
+                                      {item.quantidade}x {item.nome} (
+                                      {item.preco})
                                     </span>
-                                  )}
-                                </li>
-                              ))}
-                            </ul>
-                          </>
-                        )}
-                      </li>
-                    ))}
+                                    {item.ingredientes.length > 0 && (
+                                      <span className="text-xs text-gray-600">
+                                        -{" "}
+                                        {item.ingredientes
+                                          .map((ing) => ing.nome)
+                                          .join(", ")}
+                                      </span>
+                                    )}
+                                  </li>
+                                ))}
+                              </ul>
+                            </>
+                          )}
+                        </li>
+                      ))}
                   </ul>
                 )}
               </section>

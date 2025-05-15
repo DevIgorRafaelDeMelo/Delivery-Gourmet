@@ -84,6 +84,8 @@ function Home() {
         ingredientes: item.ingredientes || [],
       })),
       status: "Não Atendido", // Valor inicial
+      horario: new Date().toISOString(), // Adiciona o horário do pedido
+
     };
 
     // Adiciona ao Firebase
