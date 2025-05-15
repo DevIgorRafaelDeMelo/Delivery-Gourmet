@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  addDoc,
+  query,
+} from "firebase/firestore";
 import { DB } from "../firebaseConfig";
-import produtos from "../Banco/Produto";
 import logo from "../Img/1.png";
 
 function Admin() {
+  const [produtos, setProdutos] = useState([]);
+
   const [mostrarFormularioCard, setMostrarFormularioCard] = useState(false);
   const [visivel, setVisivel] = useState(true);
   const [pedidosConfirmados, setPedidosConfirmados] = useState([]);
@@ -14,7 +22,6 @@ function Admin() {
   const [pesquisa, setPesquisa] = useState("");
   const [pedidoAberto, setPedidoAberto] = useState(null);
   const [empresaEditada, setEmpresaEditada] = useState("empressa");
-  const [produtosState, setProdutos] = useState(produtos);
   const [empresa, setEmpresa] = useState({
     nome: "Minha Empresa Ltda",
     cnpj: "00.000.000/0001-00",
@@ -23,14 +30,22 @@ function Admin() {
     email: "contato@empresa.com",
     logo: logo, // Imagem temporária
   });
-  const produtosFiltrados = {
-    comidas: produtosState.comidas.filter((produto) =>
-      produto.nome.toLowerCase().includes(pesquisa.toLowerCase())
-    ),
-    bebidas: produtosState.bebidas.filter((produto) =>
-      produto.nome.toLowerCase().includes(pesquisa.toLowerCase())
-    ),
+  const buscarProdutos = async () => {
+    try {
+      const produtosRef = collection(DB, "produtos"); // Acessa coleção "produtos"
+      const querySnapshot = await getDocs(query(produtosRef)); // Obtém todos os documentos
+
+      const produtosArray = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setProdutos(produtosArray); // Atualiza o estado com os produtos buscados
+    } catch (error) {
+      console.error("Erro ao buscar produtos:", error);
+    }
   };
+
   const [horarios, setHorarios] = useState({
     segunda: "10h00 - 22h00",
     terca: "10h00 - 22h00",
@@ -99,7 +114,7 @@ function Admin() {
       [campo]: valor,
     }));
   };
-  const adicionarProduto = () => {
+  const adicionarProduto = async () => {
     if (!novoProduto.nome || !novoProduto.preco) {
       alert("Preencha todos os campos!");
       return;
@@ -108,17 +123,25 @@ function Admin() {
     // Criando um novo objeto de produto com ID único
     const novoItem = { id: Date.now(), ...novoProduto };
 
-    // Atualizando produtosState corretamente com base no tipo escolhido
+    try {
+      // Enviando para o Firebase Firestore
+      await addDoc(collection(DB, "produtos"), novoItem);
+      console.log("Produto cadastrado com sucesso!", novoItem);
+    } catch (error) {
+      console.error("Erro ao cadastrar produto:", error);
+    }
+
+    // Atualizando o estado local para refletir o novo produto
     setProdutos((prevState) => ({
       ...prevState,
       comidas:
         novoProduto.tipo === "comida"
-          ? [...prevState.comidas, novoItem]
+          ? [...prevState.comidas, novoProduto]
           : prevState.comidas,
       bebidas:
         novoProduto.tipo === "bebida"
-          ? [...prevState.bebidas, novoItem]
-          : prevState.bebidas,
+          ? [...prevState.bebidas, novoProduto]
+          : prevState.bebidas || [],
     }));
 
     // Resetando o formulário
@@ -183,6 +206,7 @@ function Admin() {
     setEditando(false);
   };
   useEffect(() => {
+    buscarProdutos();
     fetchPedidos();
   }, []);
 
@@ -462,59 +486,42 @@ function Admin() {
               {/* Cards dos produtos */}
               <div className="">
                 <div className="grid grid-cols-1 pt-10 pb-20 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {produtosFiltrados.comidas.map((produto) => (
-                    <div
-                      key={produto.id}
-                      className="bg-white m-auto  p-4 rounded-lg shadow-xl w-64 text-center"
-                    >
-                      <img
-                        src={produto.imagem}
-                        alt={produto.nome}
-                        className="sm:w-full w-[80%] m-auto  h-40 object-cover rounded"
-                      />
-                      <h3 className="text-lg font-semibold mt-2">
-                        {produto.nome}
-                      </h3>
-                      <p className="text-sm text-gray-600 h-20">
-                        {produto.descricao}
-                      </p>
-                      <p className="text-lg font-bold mt-2">{produto.preco}</p>
+                  {produtos.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {produtos.map((produto) => (
+                        <div
+                          key={produto.id}
+                          className="bg-white  m-auto  p-4 rounded-lg shadow-xl w-64 text-center"
+                        >
+                          <img
+                            src={produto.imagem}
+                            alt={produto.nome}
+                            className="sm:w-full w-[80%] m-auto  h-40 object-cover rounded-md"
+                          />
+                          <h3 className="text-lg font-semibold mt-2">
+                            {produto.nome}
+                          </h3>
+                          <p className="text-sm text-gray-600 h-20">
+                            {produto.descricao}
+                          </p>
+                          <p className="text-lg font-bold mt-2">
+                            {produto.preco}
+                          </p>
 
-                      <button
-                        onClick={() => abrirProduto(produto)}
-                        className=" mt-2 px-4 py-2 bg-blue-500  text-white rounded-md hover:bg-blue-600 transition"
-                      >
-                        Editar produto
-                      </button>
+                          <button
+                            onClick={() => abrirProduto(produto)}
+                            className="mt-2 px-4 py-2 bg-blue-500  text-white rounded-md hover:bg-blue-600 transition"
+                          >
+                            Editar produto
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-
-                  {produtosFiltrados.bebidas.map((produto) => (
-                    <div
-                      key={produto.id}
-                      className="bg-white  m-auto  p-4 rounded-lg shadow-xl w-64 text-center"
-                    >
-                      <img
-                        src={produto.imagem}
-                        alt={produto.nome}
-                        className="sm:w-full w-[80%] m-auto  h-40 object-cover rounded-md"
-                      />
-                      <h3 className="text-lg font-semibold mt-2">
-                        {produto.nome}
-                      </h3>
-                      <p className="text-sm text-gray-600 h-20">
-                        {produto.descricao}
-                      </p>
-                      <p className="text-lg font-bold mt-2">{produto.preco}</p>
-
-                      <button
-                        onClick={() => abrirProduto(produto)}
-                        className="mt-2 px-4 py-2 bg-blue-500  text-white rounded-md hover:bg-blue-600 transition"
-                      >
-                        Editar produto
-                      </button>
-                    </div>
-                  ))}
+                  ) : (
+                    <p className="text-center text-gray-600">
+                      Nenhum produto encontrado.
+                    </p>
+                  )}
                 </div>
               </div>
               {/* modal dos produtos */}
