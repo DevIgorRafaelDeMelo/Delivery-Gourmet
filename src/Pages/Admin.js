@@ -12,7 +12,6 @@ import logo from "../Img/1.png";
 
 function Admin() {
   const [produtos, setProdutos] = useState([]);
-
   const [mostrarFormularioCard, setMostrarFormularioCard] = useState(false);
   const [visivel, setVisivel] = useState(true);
   const [pedidosConfirmados, setPedidosConfirmados] = useState([]);
@@ -45,7 +44,6 @@ function Admin() {
       console.error("Erro ao buscar produtos:", error);
     }
   };
-
   const [horarios, setHorarios] = useState({
     segunda: "10h00 - 22h00",
     terca: "10h00 - 22h00",
@@ -485,38 +483,36 @@ function Admin() {
               </h2>
               {/* Cards dos produtos */}
               <div className="">
-                <div className="grid grid-cols-1 pt-10 pb-20 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pt-10 pb-20">
                   {produtos.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {produtos.map((produto) => (
-                        <div
-                          key={produto.id}
-                          className="bg-white  m-auto  p-4 rounded-lg shadow-xl w-64 text-center"
-                        >
-                          <img
-                            src={produto.imagem}
-                            alt={produto.nome}
-                            className="sm:w-full w-[80%] m-auto  h-40 object-cover rounded-md"
-                          />
-                          <h3 className="text-lg font-semibold mt-2">
-                            {produto.nome}
-                          </h3>
-                          <p className="text-sm text-gray-600 h-20">
-                            {produto.descricao}
-                          </p>
-                          <p className="text-lg font-bold mt-2">
-                            {produto.preco}
-                          </p>
+                    produtos.map((produto) => (
+                      <div
+                        key={produto.id}
+                        className="bg-white p-4 rounded-lg shadow-xl text-center flex flex-col items-center"
+                      >
+                        <img
+                          src={produto.imagem}
+                          alt={produto.nome}
+                          className="w-full sm:w-[80%] h-40 object-cover rounded-md"
+                        />
+                        <h3 className="text-lg font-semibold mt-2">
+                          {produto.nome}
+                        </h3>
+                        <p className="text-sm text-gray-600 h-20">
+                          {produto.descricao}
+                        </p>
+                        <p className="text-lg font-bold mt-2">
+                          {produto.preco}
+                        </p>
 
-                          <button
-                            onClick={() => abrirProduto(produto)}
-                            className="mt-2 px-4 py-2 bg-blue-500  text-white rounded-md hover:bg-blue-600 transition"
-                          >
-                            Editar produto
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                        <button
+                          onClick={() => abrirProduto(produto)}
+                          className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+                        >
+                          Editar produto
+                        </button>
+                      </div>
+                    ))
                   ) : (
                     <p className="text-center text-gray-600">
                       Nenhum produto encontrado.
@@ -594,13 +590,13 @@ function Admin() {
                 Gerenciamento de Pedidos
               </h2>
               {/* Código de gerenciamento de usuários */}
-              <section className="bg-gray-100 rounded-lg shadow-lg  w-full mb-[20%]">
+              <section className="bg-gradient-to-r from-blue-100 to-blue-50 rounded-lg shadow-lg w-full mb-[20%] p-6">
                 {pedidosConfirmados.length === 0 ? (
-                  <p className="text-gray-600 ">
+                  <p className="text-gray-600 text-center text-lg font-semibold">
                     Nenhum pedido confirmado ainda.
                   </p>
                 ) : (
-                  <ul className="space-y-4">
+                  <ul className="space-y-6">
                     {pedidosConfirmados
                       .slice() // Evita modificar o array original
                       .sort(
@@ -611,87 +607,78 @@ function Admin() {
                       .map((pedido, index) => (
                         <li
                           key={index}
-                          className="bg-white w-full p-4 rounded-lg shadow-md flex flex-col gap-3"
+                          className={`w-full p-6 rounded-lg shadow-lg flex flex-col gap-4 transition ${
+                            pedido.status === "Atendido"
+                              ? "bg-green-200 border-green-500"
+                              : pedido.status === "Cancelado"
+                              ? "bg-red-200 border-red-500"
+                              : "bg-white border-gray-300"
+                          } border-2`}
                         >
                           <div
-                            className="flex justify-between items-center border-b pb-2 cursor-pointer"
+                            className="flex justify-between items-center border-b pb-3 cursor-pointer"
                             onClick={() => togglePedido(index)}
                           >
-                            <h3 className="font-bold text-lg">
+                            <h3 className="font-bold text-xl text-gray-800">
                               Pedido {index + 1}
                             </h3>
-                            <p>
+                            <p className="text-gray-700 text-lg">
                               <strong>Cliente:</strong> {pedido.nome}
                             </p>
-                            <p className="text-gray-900 text">
-                              <strong>Total:</strong> {pedido.valorTotal}
+                            <p className="text-gray-700">
+                              <strong>Data do Pedido:</strong>{" "}
+                              {new Date(pedido.horario).toLocaleDateString()}{" "}
+                              <strong>Horário:</strong>{" "}
+                              {new Date(pedido.horario).toLocaleTimeString()}
+                            </p>
+                            <p className="text-gray-900 text-lg">
+                              <strong>Total:</strong> R$ {pedido.valorTotal}
                             </p>
                           </div>
 
-                          <p>
-                            <strong>Data do Pedido:</strong>{" "}
-                            {new Date(pedido.horario).toLocaleDateString()}
-                          </p>
-                          <p>
-                            <strong>Horário:</strong>{" "}
-                            {new Date(pedido.horario).toLocaleTimeString()}
-                          </p>
-
-                          {/* Botões de status */}
-                          <div className="flex gap-2">
+                          {/* Botões de status lado a lado */}
+                          <div className="flex flex-wrap gap-3 justify-center mt-4">
                             <button
-                              className={`px-4 py-2 rounded-md font-semibold text-white ${
-                                pedido.status === "Não Atendido"
-                                  ? "bg-gray-600"
-                                  : "bg-gray-300"
-                              }`}
+                              className="px-6 py-3 w-full md:w-auto bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-semibold shadow-md transition-transform transform active:scale-95"
                               onClick={() =>
-                                atualizarStatusPedido(pedido.id, "Não Atendido")
+                                atualizarStatusPedido(pedido.id, "Em andamento")
                               }
                             >
-                              Não Atendido
+                              Pedido em andamento
                             </button>
 
                             <button
-                              className={`px-4 py-2 rounded-md font-semibold text-white ${
-                                pedido.status === "Atendido"
-                                  ? "bg-green-600"
-                                  : "bg-green-300"
-                              }`}
+                              className="px-6 py-3 w-full md:w-auto bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold shadow-md transition-transform transform active:scale-95"
                               onClick={() =>
                                 atualizarStatusPedido(pedido.id, "Atendido")
                               }
                             >
-                              Atendido
+                              Confirmar pedido
                             </button>
 
                             <button
-                              className={`px-4 py-2 rounded-md font-semibold text-white ${
-                                pedido.status === "Cancelado"
-                                  ? "bg-red-600"
-                                  : "bg-red-300"
-                              }`}
+                              className="px-6 py-3 w-full md:w-auto bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold shadow-md transition-transform transform active:scale-95"
                               onClick={() =>
                                 atualizarStatusPedido(pedido.id, "Cancelado")
                               }
                             >
-                              Cancelado
+                              Cancelar pedido
                             </button>
                           </div>
 
                           {/* Exibir detalhes do pedido quando aberto */}
                           {pedidoAberto === index && (
                             <>
-                              <h4 className="font-semibold mt-2 border-t pt-2">
+                              <h4 className="font-semibold mt-4 border-t pt-3 text-gray-800">
                                 Itens do Pedido:
                               </h4>
-                              <ul className="flex flex-col gap-1">
+                              <ul className="flex flex-col gap-2">
                                 {pedido.itens.map((item, i) => (
                                   <li
                                     key={i}
-                                    className="flex justify-between items-center bg-gray-100 p-2 rounded"
+                                    className="flex justify-between items-center bg-gray-100 p-3 rounded-lg shadow-sm"
                                   >
-                                    <span>
+                                    <span className="text-gray-800">
                                       {item.quantidade}x {item.nome} (
                                       {item.preco})
                                     </span>
@@ -721,8 +708,6 @@ function Admin() {
                 Dados da Empresa
               </h2>
               <div className="  p-6  bg-white rounded-lg shadow-xl w-full ">
-                <h2 className="text-2xl  font-bold mb-4"></h2>
-
                 {/* Campo para visualizar e editar logo */}
                 <div className="flex flex-col items-center mb-4">
                   <img

@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/iframe-has-title */
 import React, { useState } from "react";
 import logo from "../Img/1.png";
 import produtos from "../Banco/Produto";
@@ -11,7 +12,7 @@ import {
   FaPhone,
 } from "react-icons/fa";
 
-function Home() {
+function Home() { 
   const [produtosState] = useState(produtos);
   const [selectedProduct, setSelectedProduct] = useState(null); // Estado para guardar o produto selecionado
   const [showCard, setShowCard] = useState(false); // Estado para controlar a exibição do card
@@ -27,7 +28,7 @@ function Home() {
   const [telefone, setTelefone] = useState("");
   const [complemento, setComplemento] = useState("");
   const numeroTelefone = "5551980253115"; //numero do forenecedor
-  const [pedidosConfirmados, setPedidosConfirmados] = useState([]);
+  const [PedidosConfirmados, setPedidosConfirmados] = useState([]);
   const [paginaAtual, setPaginaAtual] = useState("cardapio");
   const [paginaSelecionada, setPaginaSelecionada] = useState("pedidos");
   const [menuAberto, setMenuAberto] = useState(false);
@@ -85,7 +86,6 @@ function Home() {
       })),
       status: "Não Atendido", // Valor inicial
       horario: new Date().toISOString(), // Adiciona o horário do pedido
-
     };
 
     // Adiciona ao Firebase
@@ -223,18 +223,17 @@ function Home() {
 
   return (
     <div className=" bg-neutral-100 pb-20 min-h-screen text-center rounded-lg">
-      {/*Header*/}
-      <header className="h-30">
-        <header className="bg-teal-700  h-40 pt-20 sm:pt-10 py-5 w-full shadow-lg text-white flex flex-col items-center fixed top-0 left-0 right-0 ">
-          <h2 className="text-xl font-bold mt-2 "></h2>
-          <img
-            src={empresa.logo}
-            alt="Logo do Restaurante"
-            className="w-30 h-30  rounded-full  border-4 border-green-500 shadow-md"
-          />
-        </header>
-      </header>
       <>
+        {/*Header*/}
+        <header className="h-30">
+          <header className="bg-teal-700  h-40 pt-20 sm:pt-10 py-5 w-full shadow-lg text-white flex flex-col items-center fixed top-0 left-0 right-0 ">
+            <img
+              src={empresa.logo}
+              alt="Logo do Restaurante"
+              className="w-30 h-30  rounded-full  border-4 border-green-500 shadow-md"
+            />
+          </header>
+        </header>
         <nav className="bg-teal-700   fixed top-0 - sm:top-[180px] sm:w-[50%] sm:mx-[25%] sm:rounded-b left-0 w-full text-white p-4 sm:shadow-md">
           {/* Botão do menu hambúrguer */}
           <div className="flex justify-between items-center">
