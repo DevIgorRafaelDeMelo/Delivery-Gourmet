@@ -2,8 +2,6 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
-
-
 const firebaseConfig = {
   apiKey: "AIzaSyD18JVpF5hkbUQFl-GdYTjgRl_-yETls7A",
   authDomain: "dba-beer.firebaseapp.com",
@@ -11,13 +9,11 @@ const firebaseConfig = {
   storageBucket: "dba-beer.firebasestorage.app",
   messagingSenderId: "12044494944",
   appId: "1:12044494944:web:57177a46c272fadc3cfb05",
-  measurementId: "G-S40ZC8YN3R"
+  measurementId: "G-S40ZC8YN3R",
 };
- 
 
 const appDb = initializeApp(firebaseConfig);
 const auth = getAuth(appDb);
 const DB = getFirestore(appDb);
 
 export { auth, DB };
-

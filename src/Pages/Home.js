@@ -1,4 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import logo from "../Img/1.png";
+import produtos from "../Banco/Produto";
+import { collection, addDoc } from "firebase/firestore";
+import { DB } from "../firebaseConfig";
 import {
   FaPlus,
   FaMinus,
@@ -6,19 +10,9 @@ import {
   FaClock,
   FaPhone,
 } from "react-icons/fa";
-import logo from "../Abstract Chef Cooking Restaurant Free Logo.png";
-import produtos from "../Banco/Produto";
-import {
-  collection,
-  addDoc,
-  getDocs,
-  doc,
-  updateDoc,
-} from "firebase/firestore";
-import { DB } from "../firebaseConfig";
 
 function Home() {
-  const [produtosState, setProdutos] = useState(produtos);
+  const [produtosState] = useState(produtos);
   const [selectedProduct, setSelectedProduct] = useState(null); // Estado para guardar o produto selecionado
   const [showCard, setShowCard] = useState(false); // Estado para controlar a exibição do card
   const [showCardDrink, setShowCardDrink] = useState(false); // Estado para controlar a exibição do card
@@ -31,13 +25,13 @@ function Home() {
   const [endereco, setEndereco] = useState("");
   const [formaPagamento, setFormaPagamento] = useState("");
   const [telefone, setTelefone] = useState("");
-  const [complemento, setComplemento] = useState(""); 
+  const [complemento, setComplemento] = useState("");
   const numeroTelefone = "5551980253115"; //numero do forenecedor
-
   const [pedidosConfirmados, setPedidosConfirmados] = useState([]);
   const [paginaAtual, setPaginaAtual] = useState("cardapio");
   const [paginaSelecionada, setPaginaSelecionada] = useState("pedidos");
-  const [empresa, setEmpresa] = useState({
+  const [menuAberto, setMenuAberto] = useState(false);
+  const [empresa] = useState({
     nome: "Minha Empresa Ltda",
     cnpj: "00.000.000/0001-00",
     endereco: "Rua Exemplo, 123 - Cidade, Estado",
@@ -45,7 +39,7 @@ function Home() {
     email: "contato@empresa.com",
     logo: logo, // Imagem temporária
   });
-  const [horarios, setHorarios] = useState({
+  const [horarios] = useState({
     segunda: "10h00 - 22h00",
     terca: "10h00 - 22h00",
     quarta: "10h00 - 22h00",
@@ -222,57 +216,44 @@ function Home() {
   const alterarPagina = (pagina) => {
     setPaginaSelecionada(pagina);
     setPaginaAtual(pagina);
+    setMenuAberto(!menuAberto);
   };
- 
-  const fetchPedidos = async () => {
-    try {
-      const querySnapshot = await getDocs(collection(DB, "pedidos"));
-      const pedidos = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setPedidosConfirmados(pedidos);
-    } catch (error) {
-      console.error("Erro ao buscar pedidos:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchPedidos();
-  }, []);
 
   return (
     <div className=" bg-neutral-100 pb-20 min-h-screen text-center rounded-lg">
       {/*Header*/}
-      <header className="h-50">
-        <header className="bg-teal-700 h-50 p-5 w-full shadow-lg text-white flex flex-col items-center fixed top-0 left-0 right-0 ">
+      <header className="h-30">
+        <header className="bg-teal-700  h-40 pt-20 sm:pt-10 py-5 w-full shadow-lg text-white flex flex-col items-center fixed top-0 left-0 right-0 ">
+          <h2 className="text-xl font-bold mt-2 "></h2>
           <img
             src={empresa.logo}
             alt="Logo do Restaurante"
-            className="w-30 h-30 rounded-full border-4 border-white shadow-md"
+            className="w-30 h-30  rounded-full  border-4 border-green-500 shadow-md"
           />
-          <h2 className="text-xl font-bold mt-2">Delivery Gourmet</h2>
         </header>
       </header>
-
       <>
-        <nav className="bg-teal-700 hidden fixed top-50 left-[25%] text-white p-4 rounded-b-lg mt-1 px-[10%] shadow-md w-[50%] m-auto sm:w-[80%] sm:left-[10%]">
-          <ul className="flex flex-col sm:flex-row justify-between items-center gap-4">
+        <nav className="bg-teal-700   fixed top-0 - sm:top-[180px] sm:w-[50%] sm:mx-[25%] sm:rounded-b left-0 w-full text-white p-4 sm:shadow-md">
+          {/* Botão do menu hambúrguer */}
+          <div className="flex justify-between items-center">
+            <h1 className="text-lg font-bold sm:hidden">DrinkUp 24h</h1>
+            <button
+              className="sm:hidden px-3 py-2 rounded bg-white text-teal-700"
+              onClick={() => setMenuAberto(!menuAberto)}
+            >
+              {menuAberto ? "✖" : "☰"}
+            </button>
+          </div>
+
+          {/* Menu */}
+          <ul
+            className={`flex flex-col sm:flex-row justify-between items-center gap-4 ${
+              menuAberto ? "block" : "hidden sm:flex"
+            } mt-4 sm:mt-0`}
+          >
             <li>
               <button
-                className={`px-4 py-2 rounded ${
-                  paginaSelecionada === "cardapio"
-                    ? "bg-white text-teal-700"
-                    : ""
-                }`}
-                onClick={() => alterarPagina("cardapio")}
-              >
-                Cardápio
-              </button>
-            </li>
-            <li>
-              <button
-                className={`px-4 py-2 rounded ${
+                className={`px-28 py-4 rounded ${
                   paginaSelecionada === "horario"
                     ? "bg-white text-teal-700"
                     : ""
@@ -284,7 +265,19 @@ function Home() {
             </li>
             <li>
               <button
-                className={`px-4 py-2 rounded ${
+                className={`px-28 py-4 rounded ${
+                  paginaSelecionada === "cardapio"
+                    ? "bg-white text-teal-700"
+                    : ""
+                }`}
+                onClick={() => alterarPagina("cardapio")}
+              >
+                Cardápio
+              </button>
+            </li>
+            <li>
+              <button
+                className={`px-28 py-4 rounded ${
                   paginaSelecionada === "local" ? "bg-white text-teal-700" : ""
                 }`}
                 onClick={() => alterarPagina("local")}
@@ -294,7 +287,7 @@ function Home() {
             </li>
           </ul>
         </nav>
-        <div className="h-20"></div>
+        <div className="h-20 sm:h-40"></div>
         {paginaAtual === "cardapio" && (
           <>
             {/* Seção Comidas */}
@@ -601,8 +594,6 @@ function Home() {
                 </div>
               )}
             </section>
-            {/* Exibição do carrinho */}
-
             {/* Carrinho */}
             <section
               className={`fixed top-0 w-full sm:w-80 right-0 w-80 h-screen bg-gray-50 shadow-xl border-l border-gray-200 p-4 flex flex-col ${
@@ -626,7 +617,7 @@ function Home() {
 
                 {/* Carrinho */}
                 {carrinho.length > 0 ? (
-                  <ul className="list-none space-y-4">
+                  <ul className="list-none space-y-4 ">
                     {carrinho.map((item, index) => (
                       <li
                         key={index}
@@ -683,9 +674,26 @@ function Home() {
                         </button>
                       </li>
                     ))}
+                    <button
+                      className="bg-teal-600 text-white p-4 rounded hover:text-teal-500 transition duration-300"
+                      onClick={() => setMostrarCarrinho(false)}
+                    >
+                      🛒 Continuar Comprando
+                    </button>
                   </ul>
                 ) : (
-                  <p className="text-gray-600">O carrinho está vazio.</p>
+                  <>
+                    {" "}
+                    <p className="text-gray-600 py-20">
+                      O carrinho está vazio.
+                    </p>
+                    <button
+                      className="bg-teal-600 text-white p-4 rounded hover:text-teal-500 transition duration-300"
+                      onClick={() => setMostrarCarrinho(false)}
+                    >
+                      🛒 Continuar Comprando
+                    </button>
+                  </>
                 )}
               </div>
 
@@ -717,6 +725,7 @@ function Home() {
                       </span>
                     </p>
                   </div>
+
                   {/* Botão para finalizar compra */}
                   <button
                     className="w-full px-6 py-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition duration-300 font-semibold mt-4"
@@ -896,7 +905,7 @@ function Home() {
         {paginaAtual === "horario" && (
           <>
             {/* Horários de funcionamento exibidos */}
-            <div className="mt-6 p-8 rounded-lg w-[50%] m-auto text-center bg-white shadow-lg border border-gray-200">
+            <div className="mt-6 p-8 rounded-lg w-[90%] sm:w-[50%] m-auto text-center bg-white shadow-lg border border-gray-200">
               <h3 className="text-2xl font-bold text-gray-800 border-b pb-3">
                 🕒 Horários de Funcionamento
               </h3>
