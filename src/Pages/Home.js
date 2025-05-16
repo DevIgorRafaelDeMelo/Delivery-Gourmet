@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/iframe-has-title */
 import React, { useEffect, useState } from "react";
 import logo from "../Img/1.png";
-import { collection, addDoc, getDocs } from "firebase/firestore";
+import { collection, addDoc, getDocs, getDoc, doc } from "firebase/firestore";
 import { DB } from "../firebaseConfig";
 import { FaMapMarkerAlt, FaClock, FaPhone } from "react-icons/fa";
 
@@ -82,15 +82,6 @@ function Home() {
     telefone: "(00) 0000-0000",
     email: "contato@empresa.com",
     logo: logo, // Imagem temporária
-  });
-  const [horarios] = useState({
-    segunda: "10h00 - 22h00",
-    terca: "10h00 - 22h00",
-    quarta: "10h00 - 22h00",
-    quinta: "10h00 - 22h00",
-    sexta: "10h00 - 23h00",
-    sabado: "11h00 - 23h00",
-    domingo: "11h00 - 21h00",
   });
   const handleEnviarWhatsApp = (e) => {
     e.preventDefault();
@@ -212,6 +203,30 @@ function Home() {
     setPaginaAtual(pagina);
     setMenuAberto(!menuAberto);
   };
+  const [horarios, setHorarios] = useState({});
+  const buscarHorarios = async () => {
+    try {
+      const docRef = doc(DB, "horarios", "usuario");
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        setHorarios(docSnap.data().horarios);
+      } else {
+        console.log("Nenhum horário encontrado.");
+      }
+    } catch (error) {
+      console.error("Erro ao buscar horários:", error);
+    }
+  };
+  const diasDaSemanaOrdenados = [
+    "segunda",
+    "terça",
+    "quarta",
+    "quinta",
+    "sexta",
+    "sábado",
+    "domingo",
+  ];
 
   useEffect(() => {
     const buscarComidas = async () => {
@@ -226,6 +241,7 @@ function Home() {
         console.error("Erro ao buscar comidas:", error);
       }
     };
+    buscarHorarios();
 
     buscarComidas();
   }, []);
@@ -921,20 +937,29 @@ function Home() {
                 Nosso estabelecimento está sempre pronto para atender você com
                 conforto e qualidade!
               </p>
-
-              <ul className="text-lg text-gray-700 mt-4 space-y-4">
-                {Object.entries(horarios).map(([dia, horario]) => (
-                  <li
-                    key={dia}
-                    className="flex justify-between p-3 border-b border-gray-300"
-                  >
-                    <span className="font-semibold text-gray-900">
-                      {dia.charAt(0).toUpperCase() + dia.slice(1)}:
-                    </span>
-                    <span className="text-teal-600 font-medium">{horario}</span>
-                  </li>
-                ))}
-              </ul>
+              <div className="p-4 max-w-md mx-auto">
+                <h2 className="text-lg font-semibold mb-4">
+                  Horários Cadastrados
+                </h2>
+                <ul className="text-lg text-gray-700 mt-4 space-y-4">
+                  {diasDaSemanaOrdenados.map(
+                    (dia) =>
+                      horarios[dia] && (
+                        <li
+                          key={dia}
+                          className="flex justify-between p-3 border-b border-gray-300"
+                        >
+                          <span className="font-semibold text-gray-900">
+                            {dia.charAt(0).toUpperCase() + dia.slice(1)}:
+                          </span>
+                          <span className="text-teal-600 font-medium">
+                            {horarios[dia]}
+                          </span>
+                        </li>
+                      )
+                  )}
+                </ul>
+              </div>
             </div>
           </>
         )}

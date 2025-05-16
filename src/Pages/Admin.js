@@ -3,20 +3,24 @@ import {
   getFirestore,
   collection,
   getDocs,
+  getDoc,
   doc,
   updateDoc,
   addDoc,
   query,
+  setDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { DB } from "../firebaseConfig";
 import logo from "../Img/1.png";
 
 function Admin() {
+  const [produto, setProduto] = useState(null);
+
   const [produtos, setProdutos] = useState([]);
   const [mostrarFormularioCard, setMostrarFormularioCard] = useState(false);
   const [visivel, setVisivel] = useState(true);
   const [pedidosConfirmados, setPedidosConfirmados] = useState([]);
-  const [editando, setEditando] = useState(false);
   const [produtoSelecionado, setProdutoSelecionado] = useState(null);
   const [seçãoAtiva, setSeçãoAtiva] = useState("produtos");
   const [pesquisa, setPesquisa] = useState("");
@@ -30,6 +34,15 @@ function Admin() {
     email: "contato@empresa.com",
     logo: logo, // Imagem temporária
   });
+  const diasDaSemana = [
+    "segunda",
+    "terça",
+    "quarta",
+    "quinta",
+    "sexta",
+    "sábado",
+    "domingo",
+  ];
   const buscarProdutos = async () => {
     try {
       const produtosRef = collection(DB, "produtos"); // Acessa coleção "produtos"
@@ -45,15 +58,9 @@ function Admin() {
       console.error("Erro ao buscar produtos:", error);
     }
   };
-  const [horarios, setHorarios] = useState({
-    segunda: "10h00 - 22h00",
-    terca: "10h00 - 22h00",
-    quarta: "10h00 - 22h00",
-    quinta: "10h00 - 22h00",
-    sexta: "10h00 - 23h00",
-    sabado: "11h00 - 23h00",
-    domingo: "11h00 - 21h00",
-  });
+  const [horarios, setHorarios] = useState(
+    Object.fromEntries(diasDaSemana.map((dia) => [dia, ""]))
+  );
   const [novoProduto, setNovoProduto] = useState({
     nome: "",
     descricao: "",
@@ -94,25 +101,16 @@ function Admin() {
   const fecharProduto = () => {
     setProdutoSelecionado(null);
   };
-  const alterarHorario = (dia, novoHorario) => {
-    setHorarios((prevHorarios) => ({
-      ...prevHorarios,
-      [dia]: novoHorario,
-    }));
+  const excluirProduto = async (id) => {
+    try {
+      const docRef = doc(DB, "produtos", id);
+      await deleteDoc(docRef);
+      console.log("Produto excluído com sucesso!");
+    } catch (error) {
+      console.error("Erro ao excluir produto:", error);
+    }
   };
-  const atualizarProduto = (id, categoria, campo, valor) => {
-    setProdutos((prevProdutos) => ({
-      ...prevProdutos,
-      [categoria]: prevProdutos[categoria].map((produto) =>
-        produto.id === id ? { ...produto, [campo]: valor } : produto
-      ),
-    }));
 
-    setProdutoSelecionado((prevProduto) => ({
-      ...prevProduto,
-      [campo]: valor,
-    }));
-  };
   const adicionarProduto = async () => {
     if (!novoProduto.nome || !novoProduto.preco || !novoProduto.imagem) {
       alert("Preencha todos os campos, incluindo a imagem!");
@@ -176,8 +174,70 @@ function Admin() {
     setEmpresa(empresaEditada);
     setEditando(false);
   };
+  const [produtoEditado, setProdutoEditado] = useState(
+    produtoSelecionado || {}
+  );
+  const salvarHorarios = async () => {
+    try {
+      await setDoc(doc(DB, "horarios", "usuario"), { horarios });
+      console.log("Horários salvos com sucesso!");
+      setEditando(false);
+    } catch (error) {
+      console.error("Erro ao salvar horários:", error);
+    }
+  };
+
+  const [editando, setEditando] = useState(false); // Estado para ativar edição
+
+  const alterarHorario = (dia, valor) => {
+    setHorarios((prevState) => ({
+      ...prevState,
+      [dia]: valor,
+    }));
+  };
+  const salvarProduto = async () => {
+    setProdutoEditado({});
+    try {
+      const docRef = doc(DB, "produtos", produtoSelecionado.id);
+      await updateDoc(docRef, produtoEditado);
+      console.log("Produto atualizado com sucesso!");
+      buscarProdutos();
+      fecharProduto();
+    } catch (error) {
+      console.error("Erro ao salvar produto:", error);
+    }
+    // Limpar estado após salvar
+  };
+
+  const buscarHorarios = async () => {
+    try {
+      const docRef = doc(DB, "horarios", "usuario");
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        setHorarios(docSnap.data().horarios);
+      } else {
+        console.log("Nenhum horário encontrado.");
+      }
+    } catch (error) {
+      console.error("Erro ao buscar horários:", error);
+    }
+  };
+  const [modalAberto, setModalAberto] = useState(false);
+  const [produtoParaExcluir, setProdutoParaExcluir] = useState(null);
+
+  const abrirModalExclusao = (produto) => {
+    setProdutoParaExcluir(produto);
+    setModalAberto(true);
+  };
+
+  const fecharModalExclusao = () => {
+    setModalAberto(false);
+    setProdutoParaExcluir(null);
+  };
 
   useEffect(() => {
+    buscarHorarios();
     buscarProdutos();
     fetchPedidos();
   }, []);
@@ -276,52 +336,50 @@ function Admin() {
                   Horários de Funcionamento
                 </h3>
               </div>
+              <div className="p-4 max-w-md mx-auto">
+                <h2 className="text-lg font-semibold mb-4">Definir Horários</h2>
+                <ul className="space-y-2">
+                  {diasDaSemana.map((dia) => (
+                    <li
+                      key={dia}
+                      className="flex justify-between p-2 rounded-md shadow"
+                    >
+                      <span className="font-medium">
+                        {dia.charAt(0).toUpperCase() + dia.slice(1)}:
+                      </span>
+                      {editando ? (
+                        <input
+                          type="text"
+                          value={horarios[dia]}
+                          placeholder="HH:MM - HH:MM"
+                          className="bg-white p-2 rounded-md shadow"
+                          onChange={(e) => alterarHorario(dia, e.target.value)}
+                          pattern="([01]\d|2[0-3]):[0-5]\d - ([01]\d|2[0-3]):[0-5]\d"
+                          title="Formato esperado: HH:MM - HH:MM"
+                        />
+                      ) : (
+                        <span>{horarios[dia]}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
 
-              <ul className="text-sm text-gray-700 mt-2 space-y-2">
-                {Object.entries(horarios).map(([dia, horario]) => (
-                  <li
-                    key={dia}
-                    className="flex justify-between  p-2 rounded-md shadow"
+                {!editando ? (
+                  <button
+                    className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition"
+                    onClick={() => setEditando(true)}
                   >
-                    <span className="font-medium">
-                      {dia.charAt(0).toUpperCase() + dia.slice(1)}:
-                    </span>
-                    {editando ? (
-                      <input
-                        type="text"
-                        value={horario}
-                        placeholder="HH:MM - HH:MM"
-                        className="flex justify-between bg-white p-2 rounded-md shadow"
-                        onChange={(e) => alterarHorario(dia, e.target.value)}
-                        pattern="([01]\d|2[0-3]):[0-5]\d - ([01]\d|2[0-3]):[0-5]\d"
-                        title="Formato esperado: HH:MM - HH:MM"
-                      />
-                    ) : (
-                      <span>{horario}</span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-
-              {!editando && (
-                <button
-                  className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition"
-                  onClick={() => setEditando(!editando)}
-                >
-                  Editar
-                </button>
-              )}
-
-              {editando && (
-                <button
-                  className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition"
-                  onClick={() => {
-                    setEditando(false);
-                  }}
-                >
-                  Salvar
-                </button>
-              )}
+                    Editar
+                  </button>
+                ) : (
+                  <button
+                    className="mt-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow hover:bg-green-600 transition"
+                    onClick={salvarHorarios}
+                  >
+                    Salvar
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -497,64 +555,114 @@ function Admin() {
               </div>
             </div>
             {/* modal dos produtos */}
-            {produtoSelecionado && (
+            {produtoSelecionado && produtoSelecionado.nome && (
               <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                <div className="bg-white p-6 rounded-md shadow-lg w-80 text-center">
+                <div className="bg-white p-6 rounded-lg shadow-xl w-[95%]  sm:w-[50%] text-center border border-gray-200">
+                  {/* Botão de fechar com melhor espaçamento e design */}
+                  <button
+                    onClick={() => abrirProduto(produto)}
+                    className="mt-2 px-4 py-2 bg-blue-500 mb-4 text-white rounded-md hover:bg-blue-600 transition flex items-center gap-2 fixed top-2 right-2"
+                  >
+                    <span className="text-white text-xl font-bold">✖</span>
+                  </button>
+
+                  {/* Nome do Produto */}
                   <input
                     type="text"
-                    value={produtoSelecionado.nome}
+                    value={produtoEditado?.nome || ""}
                     onChange={(e) =>
-                      atualizarProduto(
-                        produtoSelecionado.id,
-                        "comidas",
-                        "nome",
-                        e.target.value
-                      )
+                      setProdutoEditado((prev) => ({
+                        ...prev,
+                        nome: e.target.value,
+                      }))
                     }
-                    className="text-lg font-semibold mb-4 text-center border border-gray-300 rounded-md px-2"
+                    className="text-lg font-semibold mb-4 text-center border border-gray-300 rounded-md px-3 py-2 w-full"
+                    placeholder="Nome do Produto"
                   />
 
+                  {/* Preço do Produto */}
                   <input
                     type="text"
-                    value={produtoSelecionado.preco}
+                    value={produtoEditado?.preco || ""}
                     onChange={(e) =>
-                      atualizarProduto(
-                        produtoSelecionado.id,
-                        "comidas",
-                        "preco",
-                        e.target.value
-                      )
+                      setProdutoEditado((prev) => ({
+                        ...prev,
+                        preco: e.target.value,
+                      }))
                     }
-                    className="text-lg font-bold mt-2 text-center border border-gray-300 rounded-md px-2"
+                    className="text-lg font-bold mb-4 text-center border border-gray-300 rounded-md px-3 py-2 w-full"
+                    placeholder="Preço"
                   />
 
+                  {/* Imagem do Produto */}
                   <input
                     type="text"
-                    value={produtoSelecionado.imagem}
+                    value={produtoEditado?.imagem || ""}
                     onChange={(e) =>
-                      atualizarProduto(
-                        produtoSelecionado.id,
-                        "comidas",
-                        "imagem",
-                        e.target.value
-                      )
+                      setProdutoEditado((prev) => ({
+                        ...prev,
+                        imagem: e.target.value,
+                      }))
                     }
-                    className="text-sm text-gray-600 mt-2 border border-gray-300 rounded-md px-2"
+                    className="text-sm text-gray-600 mb-4 border border-gray-300 rounded-md px-3 py-2 w-full"
                     placeholder="URL da imagem"
                   />
 
-                  <img
-                    src={produtoSelecionado.imagem}
-                    alt={produtoSelecionado.nome}
-                    className="w-full h-40 object-cover rounded-md mb-2"
-                  />
+                  {/* Exibir Imagem */}
+                  {produtoEditado?.imagem && (
+                    <img
+                      src={produtoEditado.imagem}
+                      alt={produtoEditado.nome}
+                      className="w-full h-48 object-cover rounded-md mt-4 shadow-md"
+                    />
+                  )}
+                  <div className="flex justify-between gap-4 mt-4">
+                    <button
+                      onClick={() => abrirModalExclusao(produtoSelecionado)}
+                      className="px-4 py-2 bg-red-500 text-white font-medium rounded-md hover:bg-red-600 transition w-1/2 shadow-md"
+                    >
+                      Excluir produto
+                    </button>
 
-                  <button
-                    onClick={fecharProduto}
-                    className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition w-full"
-                  >
-                    salvar
-                  </button>
+                    <button
+                      onClick={salvarProduto}
+                      className="px-6 py-3 bg-green-500 text-white font-medium rounded-md hover:bg-green-600 transition w-1/2 shadow-md"
+                    >
+                      Atualizar
+                    </button>
+
+                    {modalAberto && (
+                      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                        <div className="bg-white p-6 rounded-md shadow-lg w-80 text-center">
+                          <h2 className="text-lg font-bold mb-4">
+                            Confirmar Exclusão
+                          </h2>
+                          <p className="text-gray-700 mb-4">
+                            Tem certeza que deseja excluir{" "}
+                            <strong>{produtoParaExcluir?.nome}</strong>?
+                          </p>
+
+                          <div className="flex justify-between gap-4 mt-4">
+                            <button
+                              onClick={fecharModalExclusao}
+                              className="px-4 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition w-1/2 shadow-md"
+                            >
+                              Cancelar
+                            </button>
+
+                            <button
+                              onClick={() =>
+                                excluirProduto(produtoParaExcluir.id)
+                              }
+                              className="px-4 py-2 bg-red-500 text-white font-medium rounded-md hover:bg-red-600 transition w-1/2 shadow-md"
+                            >
+                              Confirmar
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
