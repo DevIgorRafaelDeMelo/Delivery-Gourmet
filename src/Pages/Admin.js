@@ -457,19 +457,19 @@ function Admin() {
                 </div>
               )}
               {seçãoAtiva === "produtos" && (
-                <div className="h-full  bg-neutral-100">
+                <div className=" bg-neutral-100 mt-[2000px] sm:mt-10">
                   {mostrarFormularioCard && (
-                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                      <div className="bg-white p-6 rounded-lg shadow-xl w-96 relative">
+                    <div className=" flex items-center justify-center bg-black bg-opacity-50">
+                      <div className="bg-white p-6 rounded-lg shadow-xl w-96 ">
                         {/* Botão de fechar no canto superior direito */}
                         <button
                           onClick={() => setMostrarFormularioCard(false)}
-                          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-lg"
+                          className="text-gray-500 hover:text-gray-700 text-lg"
                         >
                           ✖
                         </button>
 
-                        <h3 className="text-2xl font-bold mt-4">
+                        <h3 className="text-2xl font-bold  ">
                           Adicionar Produto
                         </h3>
 
