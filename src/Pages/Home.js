@@ -1,21 +1,63 @@
 /* eslint-disable jsx-a11y/iframe-has-title */
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import logo from "../Img/1.png";
-import produtos from "../Banco/Produto";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs } from "firebase/firestore";
 import { DB } from "../firebaseConfig";
-import {
-  FaPlus,
-  FaMinus,
-  FaMapMarkerAlt,
-  FaClock,
-  FaPhone,
-} from "react-icons/fa";
+import { FaMapMarkerAlt, FaClock, FaPhone } from "react-icons/fa";
 
-function Home() { 
-  const [produtosState] = useState(produtos);
+function Home() {
+  /*
+  const [ingredients] = useState([
+    { nome: "Tomate", valor: 1.5 },
+    { nome: "Cebola", valor: 1.0 },
+    { nome: "Queijo", valor: 2.5 },
+    { nome: "Azeitonas", valor: 1.8 },
+  ]);
+  const handleComprar = (produto) => {
+    setSelectedProduct(produto); // Define o produto selecionado
+    setShowCard(true);
+    // Exibe o card
+  };
+  const handleAddIngredient = (ingredient) => {
+    setSelectedIngredients([...selectedIngredients, ingredient]);
+  };
+  const handleRemoveIngredient = (ingredient) => {
+    setSelectedIngredients(
+      selectedIngredients.filter((i) => i.nome !== ingredient.nome)
+    );
+  };
+  const handleConfirmarCompra = () => {
+    // Calcular o valor total (produto + ingredientes)
+    const valorTotal =
+      quantity *
+        parseFloat(selectedProduct?.preco.replace("R$", "").replace(",", ".")) +
+      selectedIngredients.reduce(
+        (acc, ingredient) => acc + ingredient.valor,
+        0
+      );
+
+    // Criar um novo item para o carrinho
+    const novoItem = {
+      produto: selectedProduct?.nome,
+      quantidade: quantity,
+      preco: selectedProduct?.preco,
+      ingredientes: selectedIngredients,
+      valorTotal: valorTotal.toFixed(2),
+    };
+
+    // Adicionar o novo item ao carrinho
+    setCarrinho((prevCarrinho) => [...prevCarrinho, novoItem]);
+
+    // Limpar os estados para uma nova seleção
+    setSelectedIngredients([]);
+    setQuantity(1);
+    handleCloseCard();
+  };
+  const handleCloseCard = () => {
+    setShowCard(false); // Fecha o card
+    setSelectedProduct(null); // Limpa o produto selecionado
+  };*/
   const [selectedProduct, setSelectedProduct] = useState(null); // Estado para guardar o produto selecionado
-  const [showCard, setShowCard] = useState(false); // Estado para controlar a exibição do card
   const [showCardDrink, setShowCardDrink] = useState(false); // Estado para controlar a exibição do card
   const [quantity, setQuantity] = useState(1); // Quantidade inicial predefinida
   const [carrinho, setCarrinho] = useState([]);
@@ -28,10 +70,11 @@ function Home() {
   const [telefone, setTelefone] = useState("");
   const [complemento, setComplemento] = useState("");
   const numeroTelefone = "5551980253115"; //numero do forenecedor
-  const [PedidosConfirmados, setPedidosConfirmados] = useState([]);
+  const [setPedidosConfirmados] = useState([]);
   const [paginaAtual, setPaginaAtual] = useState("cardapio");
   const [paginaSelecionada, setPaginaSelecionada] = useState("pedidos");
   const [menuAberto, setMenuAberto] = useState(false);
+  const [comidas, setComidas] = useState([]);
   const [empresa] = useState({
     nome: "Minha Empresa Ltda",
     cnpj: "00.000.000/0001-00",
@@ -49,12 +92,6 @@ function Home() {
     sabado: "11h00 - 23h00",
     domingo: "11h00 - 21h00",
   });
-  const [ingredients] = useState([
-    { nome: "Tomate", valor: 1.5 },
-    { nome: "Cebola", valor: 1.0 },
-    { nome: "Queijo", valor: 2.5 },
-    { nome: "Azeitonas", valor: 1.8 },
-  ]);
   const handleEnviarWhatsApp = (e) => {
     e.preventDefault();
 
@@ -128,11 +165,6 @@ function Home() {
     setShowCardDrink(true);
     // Exibe o card
   };
-  const handleComprar = (produto) => {
-    setSelectedProduct(produto); // Define o produto selecionado
-    setShowCard(true);
-    // Exibe o card
-  };
   const addPedidoAoFirebase = async (pedido) => {
     try {
       await addDoc(collection(DB, "pedidos"), pedido);
@@ -141,48 +173,9 @@ function Home() {
       console.error("Erro ao salvar pedido:", error.message);
     }
   };
-  const handleCloseCard = () => {
-    setShowCard(false); // Fecha o card
-    setSelectedProduct(null); // Limpa o produto selecionado
-  };
   const handleCloseCardDrink = () => {
     setShowCardDrink(false); // Fecha o card
     setSelectedProduct(null); // Limpa o produto selecionado
-  };
-  const handleAddIngredient = (ingredient) => {
-    setSelectedIngredients([...selectedIngredients, ingredient]);
-  };
-  const handleRemoveIngredient = (ingredient) => {
-    setSelectedIngredients(
-      selectedIngredients.filter((i) => i.nome !== ingredient.nome)
-    );
-  };
-  const handleConfirmarCompra = () => {
-    // Calcular o valor total (produto + ingredientes)
-    const valorTotal =
-      quantity *
-        parseFloat(selectedProduct?.preco.replace("R$", "").replace(",", ".")) +
-      selectedIngredients.reduce(
-        (acc, ingredient) => acc + ingredient.valor,
-        0
-      );
-
-    // Criar um novo item para o carrinho
-    const novoItem = {
-      produto: selectedProduct?.nome,
-      quantidade: quantity,
-      preco: selectedProduct?.preco,
-      ingredientes: selectedIngredients,
-      valorTotal: valorTotal.toFixed(2),
-    };
-
-    // Adicionar o novo item ao carrinho
-    setCarrinho((prevCarrinho) => [...prevCarrinho, novoItem]);
-
-    // Limpar os estados para uma nova seleção
-    setSelectedIngredients([]);
-    setQuantity(1);
-    handleCloseCard();
   };
   const handleConfirmarCompraDrink = () => {
     // Calcular o valor total (produto + ingredientes)
@@ -214,15 +207,31 @@ function Home() {
   const handleRemoverItem = (index) => {
     setCarrinho((prevCarrinho) => prevCarrinho.filter((_, i) => i !== index));
   };
-
   const alterarPagina = (pagina) => {
     setPaginaSelecionada(pagina);
     setPaginaAtual(pagina);
     setMenuAberto(!menuAberto);
   };
 
+  useEffect(() => {
+    const buscarComidas = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(DB, "produtos"));
+        const listaComidas = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setComidas(listaComidas);
+      } catch (error) {
+        console.error("Erro ao buscar comidas:", error);
+      }
+    };
+
+    buscarComidas();
+  }, []);
+
   return (
-    <div className=" bg-neutral-100 pb-20 min-h-screen text-center rounded-lg">
+    <div className=" bg-neutral-100 pb-20 min-h-screen h-full text-center rounded-lg">
       <>
         {/*Header*/}
         <header className="h-30">
@@ -293,7 +302,7 @@ function Home() {
           <>
             {/* Seção Comidas */}
             <section className="w-full max-w-[90%] mx-auto sm:w-3/5">
-              <h2 className="text-2xl sm:text-3xl font-semibold text-teal-700 mb-4 mt-6 text-center sm:text-left">
+              {/* <h2 className="text-2xl sm:text-3xl font-semibold text-teal-700 mb-4 mt-6 text-center sm:text-left">
                 Comidas
               </h2>
               <ul className="list-none space-y-6 mb-8">
@@ -302,7 +311,7 @@ function Home() {
                     key={comida.id}
                     className="p-4 sm:p-6 bg-white border border-gray-300 rounded-lg shadow-lg flex flex-col sm:flex-row justify-between items-center gap-4"
                   >
-                    {/* Imagem do produto */}
+                   
                     <div className="w-20 h-20 sm:w-24 sm:h-24 rounded overflow-hidden shadow-md">
                       <img
                         src={comida.imagem}
@@ -333,11 +342,11 @@ function Home() {
                 ))}
               </ul>
 
-              {/* Card para seleção de quantidade */}
+             
               {showCard && (
                 <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center">
                   <div className="bg-gray-50 p-12 rounded-2xl shadow-2xl max-w-lg w-full relative">
-                    {/* Fechar Card */}
+                     
                     <button
                       className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
                       onClick={handleCloseCard}
@@ -345,12 +354,12 @@ function Home() {
                       ✕
                     </button>
 
-                    {/* Nome do produto */}
+               
                     <h2 className="text-3xl font-semibold mb-4 text-center text-teal-700">
                       {selectedProduct?.nome}
                     </h2>
 
-                    {/* Valor unitário atualizado com o total */}
+                    
                     <p className="text-lg text-center text-gray-700 mb-6">
                       Valor unitário:{" "}
                       <span className="font-bold text-gray-800">
@@ -374,14 +383,14 @@ function Home() {
                         Quantidade:
                       </span>
                       <div className="flex items-center border border-gray-300 rounded-lg p-3 w-full focus-within:ring-2 focus-within:ring-teal-500">
-                        {/* Botão para diminuir quantidade */}
+                       
                         <button
                           className="text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded-lg transition duration-300 font-semibold"
                           onClick={() => setQuantity(Math.max(1, quantity - 1))}
                         >
                           -
                         </button>
-                        {/* Input para exibir quantidade */}
+                        
                         <input
                           type="number"
                           min="1"
@@ -394,7 +403,7 @@ function Home() {
                             WebkitAppearance: "none",
                           }}
                         />
-                        {/* Botão para aumentar quantidade */}
+                     
                         <button
                           className="text-white bg-teal-500 hover:bg-teal-600 px-3 py-1 rounded-lg transition duration-300 font-semibold"
                           onClick={() => setQuantity(quantity + 1)}
@@ -404,7 +413,7 @@ function Home() {
                       </div>
                     </div>
 
-                    {/* Ingredientes complementares */}
+                     
                     <div className="mb-6">
                       <span className="block text-gray-700 font-medium mb-2">
                         Ingredientes complementares:
@@ -419,21 +428,21 @@ function Home() {
                             {ingredient.valor.toFixed(2)}
                           </span>
                           <div className="flex items-center space-x-2">
-                            {/* Botão para retirar ingrediente com ícone */}
+                     
                             <button
                               className="bg-red-500 text-black px-3 py-1 rounded-lg hover:bg-red-600 transition duration-300 font-semibold flex items-center space-x-2"
                               onClick={() => handleRemoveIngredient(ingredient)}
                             >
                               <FaMinus className="text-white" />{" "}
-                              {/* Ícone para diminuir */}
+                              
                             </button>
-                            {/* Botão para adicionar ingrediente com ícone */}
+                           
                             <button
                               className="bg-teal-500 text-white px-3 py-1 rounded-lg hover:bg-teal-600 transition duration-300 font-semibold flex items-center space-x-2"
                               onClick={() => handleAddIngredient(ingredient)}
                             >
                               <FaPlus className="text-white" />{" "}
-                              {/* Ícone para adicionar */}
+                               
                             </button>
                           </div>
                         </div>
@@ -447,7 +456,7 @@ function Home() {
                       </span>
                     </p>
 
-                    {/* Botões de ação */}
+                    
                     <div className="flex justify-around mt-6">
                       <button
                         className="px-6 py-3 bg-gray-200 rounded-lg text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition duration-300 font-semibold"
@@ -464,25 +473,23 @@ function Home() {
                     </div>
                   </div>
                 </div>
-              )}
+              )} */}
               <h2 className="text-2xl sm:text-3xl font-semibold text-teal-700 mb-4 mt-6 text-center sm:text-left">
                 Bebidas
               </h2>
               <ul className="list-none space-y-6 mb-8">
-                {produtosState.bebidas.map((comida) => (
+                {comidas.map((comida) => (
                   <li
                     key={comida.id}
-                    className="p-4 sm:p-6 flex bg-white border border-gray-300 rounded-lg shadow-lg flex flex-col sm:flex-row justify-between items-center gap-4"
+                    className="p-4 sm:p-6 bg-white border border-gray-300 rounded-lg shadow-lg flex flex-col sm:flex-row justify-between items-center gap-4"
                   >
-                    {/* Imagem do produto */}
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded overflow-hidden shadow-md flex-col">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded overflow-hidden shadow-md">
                       <img
                         src={comida.imagem}
                         alt={comida.nome}
                         className="w-full h-full object-cover"
                       />
                     </div>
-
                     <div className="flex flex-col w-full sm:w-[50%] text-center sm:text-left">
                       <h3 className="text-xl sm:text-2xl font-bold text-gray-800">
                         {comida.nome}
@@ -785,14 +792,14 @@ function Home() {
                       {/* Campo Endereço */}
                       <div className="mb-4">
                         <label className="block text-gray-700 font-medium mb-2">
-                          Endereço:
+                          Endereço completo / Rua:
                         </label>
                         <input
                           type="text"
                           value={endereco}
                           onChange={(e) => setEndereco(e.target.value)}
                           className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                          placeholder="Digite seu endereço"
+                          placeholder="Digite seundereço completo / Rua:"
                         />
                       </div>
 
