@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/iframe-has-title */
 import React, { useEffect, useState } from "react";
 import logo from "../Img/1.png";
 import { collection, addDoc, getDocs, getDoc, doc } from "firebase/firestore";
@@ -57,6 +56,7 @@ function Home() {
     setShowCard(false); // Fecha o card
     setSelectedProduct(null); // Limpa o produto selecionado
   };*/
+  const [horarios, setHorarios] = useState({});
   const [selectedProduct, setSelectedProduct] = useState(null); // Estado para guardar o produto selecionado
   const [showCardDrink, setShowCardDrink] = useState(false); // Estado para controlar a exibição do card
   const [quantity, setQuantity] = useState(1); // Quantidade inicial predefinida
@@ -82,7 +82,16 @@ function Home() {
     telefone: "(00) 0000-0000",
     email: "contato@empresa.com",
     logo: logo, // Imagem temporária
-  });
+  }); 
+  const diasDaSemanaOrdenados = [
+    "segunda",
+    "terça",
+    "quarta",
+    "quinta",
+    "sexta",
+    "sábado",
+    "domingo",
+  ];
   const handleEnviarWhatsApp = (e) => {
     e.preventDefault();
 
@@ -203,7 +212,6 @@ function Home() {
     setPaginaAtual(pagina);
     setMenuAberto(!menuAberto);
   };
-  const [horarios, setHorarios] = useState({});
   const buscarHorarios = async () => {
     try {
       const docRef = doc(DB, "horarios", "usuario");
@@ -218,18 +226,7 @@ function Home() {
       console.error("Erro ao buscar horários:", error);
     }
   };
-  const diasDaSemanaOrdenados = [
-    "segunda",
-    "terça",
-    "quarta",
-    "quinta",
-    "sexta",
-    "sábado",
-    "domingo",
-  ];
-
-  useEffect(() => {
-    const buscarComidas = async () => {
+  const buscarComidas = async () => {
       try {
         const querySnapshot = await getDocs(collection(DB, "produtos"));
         const listaComidas = querySnapshot.docs.map((doc) => ({
@@ -241,15 +238,15 @@ function Home() {
         console.error("Erro ao buscar comidas:", error);
       }
     };
-    buscarHorarios();
 
+  useEffect(() => {
+    buscarHorarios();
     buscarComidas();
   }, []);
 
   return (
     <div className=" bg-neutral-100 pb-20 min-h-screen h-full text-center rounded-lg">
       <>
-        {/*Header*/}
         <header className="h-30">
           <header className="bg-teal-700  h-40 pt-20 sm:pt-10 py-5 w-full shadow-lg text-white flex flex-col items-center fixed top-0 left-0 right-0 ">
             <img
