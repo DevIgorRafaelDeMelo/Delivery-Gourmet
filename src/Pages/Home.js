@@ -56,6 +56,8 @@ function Home() {
     setShowCard(false); // Fecha o card
     setSelectedProduct(null); // Limpa o produto selecionado
   };*/
+  const [total, setTotal] = useState(0);
+
   const [horarios, setHorarios] = useState({});
   const [selectedProduct, setSelectedProduct] = useState(null); // Estado para guardar o produto selecionado
   const [showCardDrink, setShowCardDrink] = useState(false); // Estado para controlar a exibição do card
@@ -67,10 +69,11 @@ function Home() {
   const [nome, setNome] = useState("");
   const [endereco, setEndereco] = useState("");
   const [formaPagamento, setFormaPagamento] = useState("");
+  const [bairro, setBairro] = useState("");
   const [telefone, setTelefone] = useState("");
   const [complemento, setComplemento] = useState("");
   const numeroTelefone = "5551980253115"; //numero do forenecedor
-  const [setPedidosConfirmados] = useState([]);
+  const [pedidosConfirmados, setPedidosConfirmados] = useState([]);
   const [paginaAtual, setPaginaAtual] = useState("cardapio");
   const [paginaSelecionada, setPaginaSelecionada] = useState("pedidos");
   const [menuAberto, setMenuAberto] = useState(false);
@@ -82,7 +85,7 @@ function Home() {
     telefone: "(00) 0000-0000",
     email: "contato@empresa.com",
     logo: logo, // Imagem temporária
-  }); 
+  });
   const diasDaSemanaOrdenados = [
     "segunda",
     "terça",
@@ -95,30 +98,18 @@ function Home() {
   const handleEnviarWhatsApp = (e) => {
     e.preventDefault();
 
-    const valorTotal = carrinho
-      .reduce((acc, item) => {
-        const valorProdutos =
-          item.quantidade *
-          parseFloat(item.preco.replace("R$", "").replace(",", "."));
-        const valorIngredientes = (item.ingredientes || []).reduce(
-          (accIng, ingrediente) => accIng + ingrediente.valor,
-          0
-        );
-        return acc + valorProdutos + valorIngredientes;
-      }, 0)
-      .toFixed(2);
-
     const novoPedido = {
       nome,
       endereco,
       telefone,
       formaPagamento,
       complemento,
-      valorTotal,
+      total,
+      bairro,
       itens: carrinho.map((item) => ({
         nome: item.produto,
         quantidade: item.quantidade,
-        preco: item.valorTotal,
+        precoFinal: total,
         ingredientes: item.ingredientes || [],
       })),
       status: "Não Atendido", // Valor inicial
@@ -152,8 +143,8 @@ function Home() {
           } - R$${item.valorTotal}`
       )
       .join("\n")}
-    
-    Valor Total: R$${valorTotal}
+    + 5,00 tele
+    Valor Total: R$${total}
     `);
 
     const linkWhatsApp = `https://wa.me/${numeroTelefone}?text=${mensagemCodificada}`;
@@ -181,7 +172,9 @@ function Home() {
     // Calcular o valor total (produto + ingredientes)
     const valorTotal =
       quantity *
-        parseFloat(selectedProduct?.preco.replace("R$", "").replace(",", ".")) +
+        parseFloat(
+          selectedProduct?.precoFinal.replace("R$", "").replace(",", ".")
+        ) +
       selectedIngredients.reduce(
         (acc, ingredient) => acc + ingredient.valor,
         0
@@ -191,7 +184,7 @@ function Home() {
     const novoItem = {
       produto: selectedProduct?.nome,
       quantidade: quantity,
-      preco: selectedProduct?.preco,
+      precoFinal: selectedProduct?.precoFinal,
       ingredientes: selectedIngredients,
       valorTotal: valorTotal.toFixed(2),
     };
@@ -227,22 +220,35 @@ function Home() {
     }
   };
   const buscarComidas = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(DB, "produtos"));
-        const listaComidas = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setComidas(listaComidas);
-      } catch (error) {
-        console.error("Erro ao buscar comidas:", error);
-      }
-    };
+    try {
+      const querySnapshot = await getDocs(collection(DB, "produtos"));
+      const listaComidas = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setComidas(listaComidas);
+    } catch (error) {
+      console.error("Erro ao buscar comidas:", error);
+    }
+  };
 
   useEffect(() => {
     buscarHorarios();
     buscarComidas();
-  }, []);
+    const novoTotal =
+      carrinho.reduce((acc, item) => {
+        const valorProdutos =
+          item.quantidade *
+          parseFloat(item.precoFinal.replace("R$", "").replace(",", "."));
+        const valorIngredientes = (item.ingredientes || []).reduce(
+          (accIng, ingrediente) => accIng + ingrediente.valor,
+          0
+        );
+        return acc + valorProdutos + valorIngredientes;
+      }, 0) + (bairro === "sao-joao" ? 0 : 5); // Não soma R$ 5,00 se for "São João"
+
+    setTotal(novoTotal.toFixed(2)); // Atualiza o estado total corretamente
+  }, [bairro, carrinho]); // Dispara a atualização quando bairro ou carrinho mudar
 
   return (
     <div className=" bg-neutral-100 pb-20 min-h-screen h-full text-center rounded-lg">
@@ -491,39 +497,41 @@ function Home() {
                 Bebidas
               </h2>
               <ul className="list-none space-y-6 mb-8">
-                {comidas.map((comida) => (
-                  <li
-                    key={comida.id}
-                    className="p-4 sm:p-6 bg-white border border-gray-300 rounded-lg shadow-lg flex flex-col sm:flex-row justify-between items-center gap-4"
-                  >
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded overflow-hidden shadow-md">
-                      <img
-                        src={comida.imagem}
-                        alt={comida.nome}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex flex-col w-full sm:w-[50%] text-center sm:text-left">
-                      <h3 className="text-xl sm:text-2xl font-bold text-gray-800">
-                        {comida.nome}
-                      </h3>
-                      <p className="text-gray-600 mt-2 text-sm sm:text-base">
-                        {comida.descricao}
-                      </p>
-                    </div>
-                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-                      <p className="text-lg sm:text-xl font-bold text-teal-700">
-                        {comida.preco}
-                      </p>
-                      <button
-                        className="bg-teal-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold shadow-md hover:bg-teal-600"
-                        onClick={() => handleComprarDrink(comida)}
-                      >
-                        Comprar
-                      </button>
-                    </div>
-                  </li>
-                ))}
+                {comidas
+                  .filter((comida) => comida.ativo && comida.QTD > 0)
+                  .map((comida) => (
+                    <li
+                      key={comida.id}
+                      className="p-4 sm:p-6 bg-white border border-gray-300 rounded-lg shadow-lg flex flex-col sm:flex-row justify-between items-center gap-4"
+                    >
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded overflow-hidden shadow-md">
+                        <img
+                          src={comida.imagem}
+                          alt={comida.nome}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex flex-col w-full sm:w-[50%] text-center sm:text-left">
+                        <h3 className="text-xl sm:text-2xl font-bold text-gray-800">
+                          {comida.nome}
+                        </h3>
+                        <p className="text-gray-600 mt-2 text-sm sm:text-base">
+                          {comida.descricao}
+                        </p>
+                      </div>
+                      <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                        <p className="text-lg sm:text-xl font-bold text-teal-700">
+                          {comida.precoFinal}
+                        </p>
+                        <button
+                          className="bg-teal-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold shadow-md hover:bg-teal-600"
+                          onClick={() => handleComprarDrink(comida)}
+                        >
+                          Comprar
+                        </button>
+                      </div>
+                    </li>
+                  ))}
               </ul>
               {/* Card para seleção de quantidade */}
               {showCardDrink && (
@@ -550,7 +558,7 @@ function Home() {
                         {(
                           quantity *
                             parseFloat(
-                              selectedProduct?.preco
+                              selectedProduct?.precoFinal
                                 .replace("R$", "")
                                 .replace(",", ".")
                             ) +
@@ -653,7 +661,7 @@ function Home() {
                               {(
                                 item.quantidade *
                                   parseFloat(
-                                    item.preco
+                                    item.precoFinal
                                       .replace("R$", "")
                                       .replace(",", ".")
                                   ) +
@@ -733,7 +741,9 @@ function Home() {
                               acc +
                               item.quantidade *
                                 parseFloat(
-                                  item.preco.replace("R$", "").replace(",", ".")
+                                  item.precoFinal
+                                    .replace("R$", "")
+                                    .replace(",", ".")
                                 ) +
                               (item.ingredientes || []).reduce(
                                 (accIng, ingrediente) =>
@@ -741,9 +751,12 @@ function Home() {
                                 0
                               )
                             );
-                          }, 0)
+                          }, 0) // Adicionando R$ 5,00 ao total
                           .toFixed(2)}
-                      </span>
+                      </span>{" "}
+                      +{" "}
+                      <span className="font-bold text-orange-500">R$ 5,00</span>{" "}
+                      tele entrega
                     </p>
                   </div>
 
@@ -801,6 +814,34 @@ function Home() {
                           placeholder="Digite seu nome"
                         />
                       </div>
+                      {/* Local de entrega */}
+                      <div className="mb-4">
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Bairro de entrega:
+                        </label>
+                        <select
+                          onChange={(e) => setBairro(e.target.value)} // Atualiza o estado
+                          className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                        >
+                          <option value="">Selecione o bairro</option>
+                          <option value="beira-rio">Beira Rio</option>
+                          <option value="bela-vista">Bela Vista</option>
+                          <option value="centro">Centro</option>
+                          <option value="centro-uniao">Centro União</option>
+                          <option value="floresta">Floresta</option>
+                          <option value="industrial">Industrial</option>
+                          <option value="moinho-velho">Moinho Velho</option>
+                          <option value="portal-da-serra">
+                            Portal da Serra
+                          </option>
+                          <option value="primavera">Primavera</option>
+                          <option value="sao-joao">São João</option>
+                          <option value="travessao">Travessão</option>
+                          <option value="uniao">União</option>
+                          <option value="vale-verde">Vale Verde</option>
+                          <option value="vila-becker">Vila Becker</option>
+                        </select>
+                      </div>
 
                       {/* Campo Endereço */}
                       <div className="mb-4">
@@ -817,38 +858,12 @@ function Home() {
                       </div>
 
                       {/* Valor Total */}
-                      <div className="mb-4">
-                        <label className="block text-gray-700 font-medium mb-2">
-                          Valor Total:
-                        </label>
-                        <input
-                          type="text"
-                          value={`R$${carrinho
-                            .reduce((acc, item) => {
-                              // Calcula o valor do produto multiplicado pela quantidade
-                              const valorProdutos =
-                                item.quantidade *
-                                parseFloat(
-                                  item.preco.replace("R$", "").replace(",", ".")
-                                );
-
-                              // Calcula o total dos ingredientes adicionais
-                              const valorIngredientes = (
-                                item.ingredientes || []
-                              ).reduce(
-                                (accIng, ingrediente) =>
-                                  accIng + ingrediente.valor,
-                                0
-                              );
-
-                              // Soma o valor dos produtos e dos ingredientes ao acumulador
-                              return acc + valorProdutos + valorIngredientes;
-                            }, 0)
-                            .toFixed(2)}`} // Calcula valor total do carrinho
-                          className="border border-gray-300 rounded-lg p-3 w-full bg-gray-100 text-gray-600"
-                          readOnly
-                        />
-                      </div>
+                      <input
+                        type="text"
+                        value={`R$${total}`} // Agora o total se atualiza corretamente
+                        className="border border-gray-300 rounded-lg p-3 w-full bg-gray-100 text-gray-600"
+                        readOnly
+                      />
 
                       {/* Forma de Pagamento */}
                       <div className="mb-4">
