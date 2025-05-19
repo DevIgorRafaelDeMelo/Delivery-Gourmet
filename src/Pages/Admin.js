@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
+  where,
   getFirestore,
   collection,
   getDocs,
@@ -35,6 +36,8 @@ function Admin() {
   const [nome, setSenha] = useState("");
   const [mostrarModal, setMostrarModal] = useState(true);
   const [erro, setErro] = useState("");
+  const [corBotao, setCorBotao] = useState("bg-green-500 hover:bg-green-600");  
+  const [textoBotao, setTextoBotao] = useState("Atender");  
   const [empresa, setEmpresa] = useState({
     nome: "Minha Empresa Ltda",
     cnpj: "00.000.000/0001-00",
@@ -71,9 +74,6 @@ function Admin() {
     try {
       const pedidoRef = doc(DB, "pedidos", pedidoId);
       await updateDoc(pedidoRef, { status: novoStatus });
-      console.log(`Pedido ${pedidoId} atualizado para: ${novoStatus}`);
-
-      // Atualiza localmente os pedidos
       setPedidosConfirmados((prevPedidos) =>
         prevPedidos.map((pedido) =>
           pedido.id === pedidoId ? { ...pedido, status: novoStatus } : pedido
@@ -131,7 +131,6 @@ function Admin() {
     // Retorna o valor formatado como moeda brasileira
     return `R$ ${novoPreco.toFixed(2).replace(".", ",")}`;
   };
-
   const adicionarProduto = async () => {
     if (!novoProduto.nome || !novoProduto.preco || !novoProduto.imagem) {
       alert("Preencha todos os campos, incluindo a imagem!");
@@ -164,7 +163,6 @@ function Admin() {
       console.error("Erro ao cadastrar produto:", error);
     }
   };
-
   const formatarMoeda = (valor) => {
     // Remove qualquer caractere que não seja número
     const numeroLimpo = valor.replace(/\D/g, "");
@@ -289,60 +287,46 @@ function Admin() {
       throw error;
     }
   };
-  const pedidoTeste = {
-    itens: [
-      { id: "O87O6np4hw2XjzpA05c1", nome: "Spaten", quantidade: 2 },
-      { id: "YvLoyJkDrSN5X8FpgyCW", nome: "Outro Produto", quantidade: 1 },
-    ],
-  };
-
   const confirmarSaidaEstoque = async (pedido) => {
-    try {
-      console.log("📌 Iniciando atualização de estoque...");
+    console.log("Itens do pedido:", pedido.itens);
+    setCorBotao("bg-gray-500 hover:bg-gray-600");
+    const db = getFirestore();
+    const produtosRef = collection(db, "produtos"); // Referência para a coleção correta
 
-      for (const item of pedido.itens) {
-        if (!item || !item.id || typeof item.id !== "string") {
-          console.warn(`❌ Item inválido detectado:`, item);
-          continue; // Ignora itens mal formatados
+    for (const item of pedido.itens) {
+      try {
+        const produtosQuery = query(
+          produtosRef,
+          where("nome", "==", item.nome)
+        ); // Busca pelo nome
+        const produtosSnap = await getDocs(produtosQuery);
+
+        if (!produtosSnap.empty) {
+          produtosSnap.forEach(async (doc) => {
+            const estoqueAtual = doc.data().QTD;
+            const novoEstoque = estoqueAtual - item.quantidade;
+
+            if (novoEstoque >= 0) {
+              await updateDoc(doc.ref, { QTD: novoEstoque });
+              console.log(
+                `Item ${item.nome} atualizado. Novo estoque: ${novoEstoque}`
+              );
+            } else {
+              console.warn(`Estoque insuficiente para ${item.nome}.`);
+            }
+          });
+        } else {
+          console.warn(`Item ${item.nome} não encontrado no estoque.`);
         }
-
-        console.log(
-          `🔍 Buscando produto no Firestore: ID ${item.id} - Nome: ${item.nome}`
-        );
-
-        const produtoRef = doc(DB, "produtos", String(item.id)); // 🔹 Garante que o ID seja string
-        const produtoSnap = await getDoc(produtoRef);
-
-        if (!produtoSnap.exists()) {
-          console.warn(`❌ Produto ${item.nome} não encontrado!`);
-          continue;
-        }
-
-        const produtoData = produtoSnap.data();
-        console.log(`📊 Estoque atual: ${produtoData.QTD}`);
-
-        const novaQuantidade = Math.max(
-          Number(produtoData.QTD) - Number(item.quantidade || 0),
-          0
-        );
-
-        console.log(`✏️ Atualizando Firestore...`);
-        await updateDoc(produtoRef, { QTD: novaQuantidade });
-
-        console.log(
-          `✅ Estoque atualizado para ${item.nome}: Nova quantidade ${novaQuantidade}`
-        );
+      } catch (error) {
+        console.error(`Erro ao atualizar estoque do item ${item.nome}:`, error);
       }
-    } catch (error) {
-      console.error("❌ Erro ao atualizar estoque:", error);
     }
   };
   const togglePedido = (index) => {
     setPedidoAberto(pedidoAberto === index ? null : index);
   };
-
   useEffect(() => {
-    confirmarSaidaEstoque(pedidoTeste);
     buscarProdutos();
     fetchPedidos();
     buscarHorarios();
@@ -600,6 +584,12 @@ function Admin() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 w-full lg:grid-cols-4 gap-4 pt-10 pb-20">
+                    <button
+                      onClick={() => setMostrarFormularioCard(true)}
+                      className="px-6 m-auto sm:mt-0 mt-4 hidden sm:block sm:py-3 h-full w-full bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600"
+                    >
+                      Adicionar Produto
+                    </button>
                     {produtos.length > 0 ? (
                       produtos.map((produto) => (
                         <div
@@ -638,12 +628,6 @@ function Admin() {
                         Nenhum produto encontrado.
                       </p>
                     )}
-                    <button
-                      onClick={() => setMostrarFormularioCard(true)}
-                      className="px-6 m-auto sm:mt-0 mt-4 sm:py-3 h-full w-full bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600"
-                    >
-                      Adicionar Produto
-                    </button>
                   </div>
 
                   {/* Modal dos produtos */}
@@ -884,13 +868,14 @@ function Admin() {
                         <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow-lg">
                           <thead>
                             <tr className="bg-teal-500 text-white">
+                              <th className="p-4 text-left">Status</th>
                               <th className="p-4 text-left">Cliente</th>
                               <th className="p-4 text-left">Horário</th>
                               <th className="p-4 text-left">Valor Total</th>
                               <th className="p-4 text-left">
                                 Forma de Pagamento
                               </th>
-                              <th className="p-4 text-left">Status</th>
+
                               <th className="p-4 text-left">Ações</th>
                             </tr>
                           </thead>
@@ -909,6 +894,17 @@ function Admin() {
                                     className="border-b bg-gray-100 cursor-pointer hover:bg-gray-200 transition-all"
                                     onClick={() => togglePedido(index)}
                                   >
+                                    <td
+                                      className={`p-4 font-bold ${
+                                        pedido.status === "Atendido"
+                                          ? "text-green-600"
+                                          : pedido.status === "Cancelado"
+                                          ? "text-red-600"
+                                          : "text-gray-600"
+                                      }`}
+                                    >
+                                      {pedido.status}
+                                    </td>
                                     <td className="p-4 text-gray-700">
                                       {pedido.nome}
                                     </td>
@@ -923,22 +919,26 @@ function Admin() {
                                     <td className="p-4 font-bold text-teal-700">
                                       {pedido.formaPagamento}
                                     </td>
-                                    <td
-                                      className={`p-4 font-bold ${
-                                        pedido.status === "Atendido"
-                                          ? "text-green-600"
-                                          : pedido.status === "Cancelado"
-                                          ? "text-red-600"
-                                          : "text-gray-600"
-                                      }`}
-                                    >
-                                      {pedido.status}
-                                    </td>
+
                                     <td className="p-4">
                                       <div className="flex gap-2">
                                         <button
-                                          className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium shadow"
+                                          className={`px-4 py-2 text-white rounded-md font-medium shadow ${
+                                            pedido.status === "Atendido"
+                                              ? "bg-green-500 hover:bg-green-600"
+                                              : "bg-gray-500 hover:bg-gray-600"
+                                          }`}
                                           onClick={() => {
+                                            if (pedido.status === "Atendido") {
+                                              const confirmar = window.confirm(
+                                                "Este pedido já está marcado como 'Atendido'. Deseja confirmar novamente? Se for confirmado irá movimentar estoque novamente !"
+                                              );
+
+                                              if (!confirmar) {
+                                                return; // Se o usuário cancelar, interrompe a ação
+                                              }
+                                            }
+                                            setTextoBotao("Atendido");
                                             atualizarStatusPedido(
                                               pedido.id,
                                               "Atendido"
@@ -946,19 +946,7 @@ function Admin() {
                                             confirmarSaidaEstoque(pedido); // Atualiza estoque no Firebase
                                           }}
                                         >
-                                          Atendido
-                                        </button>
-
-                                        <button
-                                          className="px-4 py-2 bg-red-400 hover:bg-red-500 text-white rounded-md font-medium shadow"
-                                          onClick={() =>
-                                            atualizarStatusPedido(
-                                              pedido.id,
-                                              "Cancelado"
-                                            )
-                                          }
-                                        >
-                                          Cancelar
+                                          {textoBotao}
                                         </button>
                                       </div>
                                     </td>

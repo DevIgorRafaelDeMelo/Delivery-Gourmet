@@ -950,9 +950,6 @@ function Home() {
                 conforto e qualidade!
               </p>
               <div className="p-4 max-w-md mx-auto">
-                <h2 className="text-lg font-semibold mb-4">
-                  Horários Cadastrados
-                </h2>
                 <ul className="text-lg text-gray-700 mt-4 space-y-4">
                   {diasDaSemanaOrdenados.map(
                     (dia) =>
